@@ -1,0 +1,26 @@
+# Backend specific
+notes-backend/target/
+notes-backend/.mvn/wrapper/maven-wrapper.jar
+notes-backend/HELP.md
+
+# Frontend specific  
+notes-frontend/node_modules/
+notes-frontend/build/
+notes-frontend/.env.local
+notes-frontend/.env.development.local
+notes-frontend/.env.test.local
+notes-frontend/.env.production.local
+notes-frontend/npm-debug.log*
+notes-frontend/yarn-debug.log*
+notes-frontend/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
