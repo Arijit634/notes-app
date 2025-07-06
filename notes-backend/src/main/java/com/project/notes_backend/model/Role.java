@@ -3,8 +3,6 @@ package com.project.notes_backend.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
