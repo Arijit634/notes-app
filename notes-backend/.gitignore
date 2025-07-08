@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore environment files containing secrets
+.env
+
+#exclude the bfg-1.15.0
+bfg-1.15.0.jar
