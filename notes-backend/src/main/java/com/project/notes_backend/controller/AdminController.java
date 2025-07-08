@@ -17,12 +17,14 @@ import com.project.notes_backend.service.UserService;
 
 @RestController
 @RequestMapping("/api/admin")
+// @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
-    @GetMapping("/get-users")
+    // @PreAuthorize("hasRole('ADMIN')") //method level
+    @GetMapping("/getusers")
     public ResponseEntity<List<User>> getUsers() {
         // List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
@@ -38,6 +40,7 @@ public class AdminController {
         }
     }
 
+    // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{id}")
     public ResponseEntity<UserDTO> getUserById(@RequestParam Long id) {
         UserDTO user = userService.getUserById(id);
