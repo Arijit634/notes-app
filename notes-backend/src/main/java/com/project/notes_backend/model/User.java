@@ -76,6 +76,11 @@ public class User {
     @ToString.Exclude
     private Role role;
 
+    // Enhanced: Bidirectional relationship with Notes
+    // @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    // @JsonManagedReference
+    // @ToString.Exclude
+    // private List<Note> notes = new ArrayList<>();
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;

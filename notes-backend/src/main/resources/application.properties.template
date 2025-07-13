@@ -1,0 +1,54 @@
+spring.application.name=notes-backend
+
+# Database Configuration (Use environment variables for production)
+spring.datasource.url=${DATABASE_URL:jdbc:postgresql://localhost:5432/notes}
+spring.datasource.username=${DATABASE_USERNAME:your_username}
+spring.datasource.password=${DATABASE_PASSWORD:your_password}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=false
+
+# Cache Configuration
+spring.cache.type=caffeine
+spring.cache.caffeine.spec=initialCapacity=100,maximumSize=1000,expireAfterWrite=10m
+
+# Logging Configuration
+logging.level.org.springframework.security=INFO
+logging.level.com.project.notes_backend=INFO
+logging.level.org.springframework.cache=INFO
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+
+# Pagination Configuration
+spring.data.web.pageable.default-page-size=20
+spring.data.web.pageable.max-page-size=100
+
+# JWT Configuration (Use environment variables for production)
+spring.app.jwtSecret=${JWT_SECRET:your-jwt-secret-key-change-this-in-production}
+spring.app.jwtExpirationMs=${JWT_EXPIRATION:172800000}
+
+# CORS Configuration
+frontend.url=${FRONTEND_URL:http://localhost:3000}
+
+# Email configuration (Use environment variables for production)
+spring.mail.host=${MAIL_HOST:smtp.gmail.com}
+spring.mail.port=${MAIL_PORT:587}
+spring.mail.username=${MAIL_USERNAME:your-email@gmail.com}
+spring.mail.password=${MAIL_PASSWORD:your-app-password}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# OAuth2 config (Use environment variables for production)
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:dummy}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:dummy}
+spring.security.oauth2.client.registration.github.client-id=${GITHUB_CLIENT_ID:dummy}
+spring.security.oauth2.client.registration.github.client-secret=${GITHUB_CLIENT_SECRET:dummy}
+
+# API Documentation
+springdoc.api-docs.path=/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.operationsSorter=method

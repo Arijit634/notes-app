@@ -5,28 +5,29 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.notes_backend.dto.UserDTO;
+import com.project.notes_backend.model.Role;
 import com.project.notes_backend.model.User;
 import com.project.notes_backend.service.UserService;
 
 @RestController
-@RequestMapping("/api/admin")
-// @PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/admin")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
-    // @PreAuthorize("hasRole('ADMIN')") //method level
     @GetMapping("/getusers")
     public ResponseEntity<List<User>> getUsers() {
-        // List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
     }
 
@@ -40,14 +41,68 @@ public class AdminController {
         }
     }
 
-    // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{id}")
-    public ResponseEntity<UserDTO> getUserById(@RequestParam Long id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         UserDTO user = userService.getUserById(id);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/user/{userId}/lock")
+    public ResponseEntity<String> updateAccountLockStatus(@PathVariable Long userId, @RequestParam boolean lock) {
+        try {
+            userService.updateAccountLockStatus(userId, lock);
+            String status = lock ? "locked" : "unlocked";
+            return new ResponseEntity<>("User account " + status + " successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating lock status: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/user/{userId}/enable")
+    public ResponseEntity<String> updateAccountEnabledStatus(@PathVariable Long userId, @RequestParam boolean enabled) {
+
+        try {
+            userService.updateAccountEnabledStatus(userId, enabled);
+            String status = enabled ? "enabled" : "disabled";
+            return new ResponseEntity<>("User account " + status + " successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating enabled status: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/user/{userId}/account-expiry")
+    public ResponseEntity<String> updateAccountExpiryStatus(@PathVariable Long userId, @RequestParam boolean expire) {
+
+        try {
+            userService.updateAccountExpiryStatus(userId, expire);
+            String status = expire ? "expired" : "not expired";
+            return new ResponseEntity<>("User account set to " + status + " successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating account expiry: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/user/{userId}/credentials-expiry")
+    public ResponseEntity<String> updateCredentialsExpiryStatus(@PathVariable Long userId, @RequestParam boolean expire) {
+        try {
+            userService.updateCredentialsExpiryStatus(userId, expire);
+            String status = expire ? "expired" : "not expired";
+            return new ResponseEntity<>("User credentials set to " + status + " successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating credentials expiry: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/roles")
+    public ResponseEntity<List<Role>> getAllRoles() {
+        try {
+            return new ResponseEntity<>(userService.getAllRoles(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

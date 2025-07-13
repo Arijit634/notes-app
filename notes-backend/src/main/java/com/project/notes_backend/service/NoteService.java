@@ -1,17 +1,26 @@
 package com.project.notes_backend.service;
 
-import java.util.List;
+import java.util.Map;
 
-import com.project.notes_backend.model.Note;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.project.notes_backend.dto.NoteRequestDTO;
+import com.project.notes_backend.dto.NoteResponseDTO;
 
 public interface NoteService {
 
-    Note createNoteForUser(String userName, String content);
+    NoteResponseDTO createNoteForUser(String username, NoteRequestDTO noteRequest);
 
-    Note updateNoteForUser(String userName, Long noteId, String content);
+    NoteResponseDTO updateNoteForUser(Long noteId, NoteRequestDTO noteRequest, String username);
 
-    void deleteNoteForUser(String userName, Long noteId);
+    void deleteNoteForUser(Long noteId, String username);
 
-    List<Note> getNotesForUser(String userName);
+    Page<NoteResponseDTO> getNotesForUser(String username, String search, Pageable pageable);
 
+    NoteResponseDTO getNoteByIdForUser(Long noteId, String username);
+
+    Page<NoteResponseDTO> searchUserNotes(String username, String query, Pageable pageable);
+
+    Map<String, Object> getUserNotesStats(String username);
 }
