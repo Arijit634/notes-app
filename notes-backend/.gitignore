@@ -179,6 +179,10 @@ hs_err_pid*
 # Backup files
 *.bak
 *.backup
+*bkup*
+*backup*
+*Enhanced*
+*_New*
 *~
 
 # OS generated files
