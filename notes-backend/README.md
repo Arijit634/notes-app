@@ -1,12 +1,12 @@
 # Notes Backend API
 
-A ## API Endpoints
+ ## API Endpoints
 
 - **Authentication**: `/auth/*`
 - **Notes**: `/api/v1/notes/*`
 - **Admin**: `/admin/*`
 - **Audit**: `/audit/*`
-- **Documentation**: `/swagger-ui.html` Boot REST API for managing personal notes with authentication and advanced features.
+- **Documentation**: `/swagger-ui.html`
 
 ## Tech Stack
 
@@ -28,13 +28,6 @@ A ## API Endpoints
 - Audit logging
 - Caching for performance
 - API documentation with Swagger
-
-## API Endpoints
-
-- **Authentication**: `/api/auth/*`
-- **Notes**: `/api/v1/notes/*`
-- **Admin**: `/admin/*`
-- **Documentation**: `/swagger-ui.html`
 
 ## Database
 
