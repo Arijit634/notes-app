@@ -262,4 +262,47 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/oauth2/success")
+    public ResponseEntity<?> oauth2Success(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails != null) {
+            UserDetailsImpl userDetailsImpl = (UserDetailsImpl) userDetails;
+            String jwtToken = jwtUtils.generateTokenFromUsername(userDetailsImpl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "OAuth2 login successful!");
+            response.put("username", userDetails.getUsername());
+            response.put("token", jwtToken);
+            response.put("authorities", userDetails.getAuthorities());
+
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Authentication failed"));
+    }
+
+    @GetMapping("/public/test")
+    public ResponseEntity<?> publicTest() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Public test endpoint working!");
+        response.put("timestamp", System.currentTimeMillis());
+        response.put("status", "success");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/public/login")
+    public ResponseEntity<?> loginPage(@RequestParam(required = false) String error) {
+        Map<String, Object> response = new HashMap<>();
+        if (error != null) {
+            response.put("error", "OAuth2 authentication failed");
+            response.put("message", "There was an issue with OAuth2 login. Please try again.");
+            response.put("suggestion", "Check your Google/GitHub account settings or try a different provider");
+        } else {
+            response.put("message", "Login page");
+            response.put("googleOAuth2", "http://localhost:8080/oauth2/authorization/google");
+            response.put("githubOAuth2", "http://localhost:8080/oauth2/authorization/github");
+        }
+        response.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(response);
+    }
+
 }
