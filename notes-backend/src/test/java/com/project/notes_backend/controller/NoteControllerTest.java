@@ -39,10 +39,10 @@ class NoteControllerTest {
 
     @MockBean
     private NoteService noteService;
-    
+
     @MockBean
     private JwtUtils jwtUtils;
-    
+
     @MockBean
     private UserDetailsServiceImpl userDetailsService;
 
@@ -80,7 +80,7 @@ class NoteControllerTest {
         when(noteService.createNoteForUser(eq("testuser"), any(NoteRequestDTO.class)))
                 .thenReturn(noteResponseDTO);
 
-        mockMvc.perform(post("/api/v1/notes")
+        mockMvc.perform(post("/api/notes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(noteRequestDTO))
                 .with(csrf()))
@@ -97,7 +97,7 @@ class NoteControllerTest {
         when(noteService.getNoteByIdForUser(1L, "testuser"))
                 .thenReturn(noteResponseDTO);
 
-        mockMvc.perform(get("/api/v1/notes/1")
+        mockMvc.perform(get("/api/notes/1")
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -110,11 +110,11 @@ class NoteControllerTest {
     @WithMockUser(username = "testuser")
     void testGetAllNotes() throws Exception {
         Page<NoteResponseDTO> notePage = new PageImpl<>(List.of(noteResponseDTO));
-        
+
         when(noteService.getNotesForUser(eq("testuser"), isNull(), any(PageRequest.class)))
                 .thenReturn(notePage);
 
-        mockMvc.perform(get("/api/v1/notes?page=0&size=10")
+        mockMvc.perform(get("/api/notes?page=0&size=10")
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Test Note"));
@@ -126,11 +126,11 @@ class NoteControllerTest {
     @WithMockUser(username = "testuser")
     void testSearchNotes() throws Exception {
         Page<NoteResponseDTO> notePage = new PageImpl<>(List.of(noteResponseDTO));
-        
+
         when(noteService.searchUserNotes(eq("testuser"), eq("test"), any(PageRequest.class)))
                 .thenReturn(notePage);
 
-        mockMvc.perform(get("/api/v1/notes/search?query=test&page=0&size=10")
+        mockMvc.perform(get("/api/notes/search?query=test&page=0&size=10")
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Test Note"));
@@ -144,7 +144,7 @@ class NoteControllerTest {
         when(noteService.updateNoteForUser(eq(1L), any(NoteRequestDTO.class), eq("testuser")))
                 .thenReturn(noteResponseDTO);
 
-        mockMvc.perform(put("/api/v1/notes/1")
+        mockMvc.perform(put("/api/notes/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(noteRequestDTO))
                 .with(csrf()))
@@ -159,7 +159,7 @@ class NoteControllerTest {
     void testDeleteNote() throws Exception {
         doNothing().when(noteService).deleteNoteForUser(1L, "testuser");
 
-        mockMvc.perform(delete("/api/v1/notes/1")
+        mockMvc.perform(delete("/api/notes/1")
                 .with(csrf()))
                 .andExpect(status().isNoContent());
 

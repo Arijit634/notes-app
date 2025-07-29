@@ -1,20 +1,25 @@
 package com.project.notes_backend.integration;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.*;
-import org.springframework.test.context.ActiveProfiles;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -123,7 +128,7 @@ class ComprehensiveControllerIntegrationTest {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl + "/api/v1/notes",
+                baseUrl + "/api/notes",
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -183,7 +188,7 @@ class ComprehensiveControllerIntegrationTest {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(noteRequest, headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                baseUrl + "/api/v1/notes", entity, String.class);
+                baseUrl + "/api/notes", entity, String.class);
 
         // Should succeed with authentication
         assertThat(response.getStatusCode()).isIn(
@@ -219,7 +224,7 @@ class ComprehensiveControllerIntegrationTest {
 
         // Test notes endpoint (should work with authentication)
         ResponseEntity<String> notesResponse = restTemplate.exchange(
-                baseUrl + "/api/v1/notes",
+                baseUrl + "/api/notes",
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -244,7 +249,7 @@ class ComprehensiveControllerIntegrationTest {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl + "/api/v1/notes",
+                baseUrl + "/api/notes",
                 HttpMethod.GET,
                 entity,
                 String.class);
