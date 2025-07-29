@@ -106,7 +106,6 @@ application-*.properties
 *.env
 *.env.*
 .env*
-config/
 configuration/
 
 # Production and sensitive configuration files
