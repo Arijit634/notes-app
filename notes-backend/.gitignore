@@ -126,12 +126,18 @@ keys/
 certs/
 certificates/
 
+
 # Email and external service configurations
 *mail*
 *smtp*
-*oauth*
-*jwt*
 *secret*
+
+# Allow all files in test config and service/impl folders
+!src/test/java/com/project/notes_backend/config/
+!src/test/java/com/project/notes_backend/config/**
+!src/test/java/com/project/notes_backend/service/impl/
+!src/test/java/com/project/notes_backend/service/impl/**
+!src/test/java/com/project/notes_backend/security/**
 
 # Database connection strings and credentials
 *database*
