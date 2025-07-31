@@ -17,11 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.project.notes_backend.model.AppRole;
 import com.project.notes_backend.model.Role;
@@ -67,6 +62,10 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/login**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        // H2 Console for database access
+                        .requestMatchers("/h2-console/**").permitAll()
                         // Swagger/OpenAPI documentation endpoints
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
@@ -94,6 +93,9 @@ public class SecurityConfig {
         // Disable form login for REST API
         http.formLogin(form -> form.disable());
         http.httpBasic(withDefaults());
+
+        // Enable H2 console in frames
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();
     }

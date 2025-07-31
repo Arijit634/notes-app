@@ -28,7 +28,7 @@ import com.project.notes_backend.service.NoteService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/notes")
+@RequestMapping("/api/notes")
 @Validated
 public class NoteController {
 

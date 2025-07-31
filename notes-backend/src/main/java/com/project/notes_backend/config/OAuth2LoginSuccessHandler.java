@@ -19,7 +19,6 @@ import com.project.notes_backend.model.Role;
 import com.project.notes_backend.model.User;
 import com.project.notes_backend.repository.RoleRepository;
 import com.project.notes_backend.repository.UserRepository;
-import com.project.notes_backend.security.UserDetailsImpl;
 import com.project.notes_backend.security.jwt.JwtUtils;
 
 import jakarta.servlet.ServletException;
@@ -41,13 +40,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Value("${frontend.url}")
     private String frontendUrl;
 
+    @Value("${oauth2.redirect.base-url:http://localhost:5000}")
+    private String oauth2BaseUrl;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        
+
         // Extract user information based on provider
         String provider = extractProvider(request);
         String email = extractEmail(attributes, provider);
@@ -63,13 +65,13 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             System.out.println("User found/created: " + user.getUserName());
 
             // Generate JWT token by creating UserDetailsImpl from User
-            com.project.notes_backend.security.UserDetailsImpl userDetails = 
-                com.project.notes_backend.security.UserDetailsImpl.build(user);
+            com.project.notes_backend.security.UserDetailsImpl userDetails
+                    = com.project.notes_backend.security.UserDetailsImpl.build(user);
             String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
             // For testing without frontend, redirect to backend test endpoint
             // String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080/auth/public/test")
+            String targetUrl = UriComponentsBuilder.fromUriString(oauth2BaseUrl + "/auth/public/test")
                     .queryParam("token", jwtToken)
                     .queryParam("user", user.getUserName())
                     .queryParam("email", user.getEmail())
@@ -83,8 +85,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             System.err.println("OAuth2 authentication error: " + e.getMessage());
             e.printStackTrace();
             // Redirect to error page with more details
-            String errorUrl = "http://localhost:8080/auth/public/test?error=oauth2_failed&message=" + 
-                             java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+            String errorUrl = oauth2BaseUrl + "/auth/public/test?error=oauth2_failed&message="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
     }
@@ -101,7 +103,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private String extractEmail(Map<String, Object> attributes, String provider) {
         String email = (String) attributes.get("email");
-        
+
         if (email == null && "github".equals(provider)) {
             // GitHub might not provide public email, use login + @github.com
             String login = (String) attributes.get("login");
@@ -109,13 +111,13 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 email = login + "@github.com";
             }
         }
-        
+
         return email;
     }
 
     private String extractUsername(Map<String, Object> attributes, String provider, String email) {
         String username = null;
-        
+
         if ("github".equals(provider)) {
             username = (String) attributes.get("login");
         } else if ("google".equals(provider)) {
@@ -124,7 +126,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 username = email.split("@")[0];
             }
         }
-        
+
         // Fallback to name or email
         if (username == null) {
             String name = (String) attributes.get("name");
@@ -134,7 +136,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 username = email.split("@")[0];
             }
         }
-        
+
         return sanitizeUsername(username);
     }
 
@@ -143,18 +145,20 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     }
 
     private String sanitizeUsername(String username) {
-        if (username == null) return "user" + System.currentTimeMillis() % 10000;
-        
+        if (username == null) {
+            return "user" + System.currentTimeMillis() % 10000;
+        }
+
         // Remove special characters and ensure length constraints
         username = username.toLowerCase().replaceAll("[^a-z0-9]", "");
-        
+
         if (username.length() < 3) {
             username = "user" + username;
         }
         if (username.length() > 20) {
             username = username.substring(0, 20);
         }
-        
+
         return username;
     }
 
@@ -196,7 +200,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         User savedUser = userRepository.save(newUser);
         System.out.println("Created new OAuth2 user: " + savedUser.getUserName() + " via " + provider);
-        
+
         return savedUser;
     }
 
@@ -214,7 +218,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
 
         // Last resort - use timestamp
-        return baseUsername.substring(0, Math.min(baseUsername.length(), 10)) + 
-               System.currentTimeMillis() % 10000;
+        return baseUsername.substring(0, Math.min(baseUsername.length(), 10))
+                + System.currentTimeMillis() % 10000;
     }
 }

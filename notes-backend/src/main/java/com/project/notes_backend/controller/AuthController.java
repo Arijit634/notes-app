@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -290,16 +292,23 @@ public class AuthController {
     }
 
     @GetMapping("/public/login")
-    public ResponseEntity<?> loginPage(@RequestParam(required = false) String error) {
+    public ResponseEntity<?> loginPage(@RequestParam(required = false) String error, HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
+        
+        // Build base URL dynamically
+        String baseUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            baseUrl += ":" + request.getServerPort();
+        }
+        
         if (error != null) {
             response.put("error", "OAuth2 authentication failed");
             response.put("message", "There was an issue with OAuth2 login. Please try again.");
             response.put("suggestion", "Check your Google/GitHub account settings or try a different provider");
         } else {
             response.put("message", "Login page");
-            response.put("googleOAuth2", "http://localhost:8080/oauth2/authorization/google");
-            response.put("githubOAuth2", "http://localhost:8080/oauth2/authorization/github");
+            response.put("googleOAuth2", baseUrl + "/oauth2/authorization/google");
+            response.put("githubOAuth2", baseUrl + "/oauth2/authorization/github");
         }
         response.put("timestamp", System.currentTimeMillis());
         return ResponseEntity.ok(response);

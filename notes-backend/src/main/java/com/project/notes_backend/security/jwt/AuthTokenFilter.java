@@ -34,6 +34,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         logger.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
+
+        // Skip JWT processing for public endpoints
+        String requestPath = request.getRequestURI();
+        if (isPublicEndpoint(requestPath)) {
+            logger.debug("Skipping JWT processing for public endpoint: {}", requestPath);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
@@ -62,5 +71,25 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         String jwt = jwtUtils.getJwtFromHeader(request);
         logger.debug("AuthTokenFilter.java: {}", jwt);
         return jwt;
+    }
+
+    /**
+     * Check if the requested path is a public endpoint that should skip JWT
+     * processing
+     */
+    private boolean isPublicEndpoint(String requestPath) {
+        return requestPath.startsWith("/auth/public/")
+                || requestPath.startsWith("/api/auth/public/")
+                || requestPath.startsWith("/oauth2/")
+                || requestPath.startsWith("/login")
+                || requestPath.equals("/error")
+                || requestPath.equals("/favicon.ico")
+                || requestPath.startsWith("/actuator/")
+                || requestPath.startsWith("/swagger-ui/")
+                || requestPath.equals("/swagger-ui.html")
+                || requestPath.startsWith("/api-docs")
+                || requestPath.startsWith("/v3/api-docs/")
+                || requestPath.startsWith("/swagger-resources/")
+                || requestPath.startsWith("/webjars/");
     }
 }

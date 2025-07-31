@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.notes_backend.dto.UserDTO;
 import com.project.notes_backend.model.AppRole;
@@ -162,6 +163,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid password reset token"));

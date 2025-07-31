@@ -144,10 +144,13 @@ certificates/
 *db-config*
 *datasource*
 
-# Docker files (except main ones)
+# Docker files
 *.dockerfile
-!Dockerfile
+Dockerfile
 docker-compose.override.yml
+*.txt
+*.conf
+*.csv
 
 # Local development and testing directories
 local/
@@ -214,3 +217,6 @@ Desktop.ini
 coverage/
 *.lcov
 .eslintcache
+
+README.md
+*.yml
