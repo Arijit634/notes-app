@@ -144,6 +144,17 @@ certificates/
 *db-config*
 *datasource*
 
+# Ignore specific unwanted auto-generated files
+src/main/java/com/project/notes_backend/config/WebSecurityConfig.java
+src/test/java/com/project/notes_backend/config/AppConfigTest.java
+src/test/java/com/project/notes_backend/config/WebSecurityConfigTest.java
+src/test/java/com/project/notes_backend/controller/AuditLogControllerTest.java
+src/test/java/com/project/notes_backend/controller/AuthControllerUnitTest.java
+src/test/java/com/project/notes_backend/controller/AuthControllerWebMvcTest.java
+src/test/java/com/project/notes_backend/integration/NotesApiIntegrationTest.java
+src/test/java/com/project/notes_backend/security/UserDetailsImplTest.java
+src/test/java/com/project/notes_backend/security/UserDetailsServiceImplTest.java
+
 # Docker files
 *.dockerfile
 Dockerfile
