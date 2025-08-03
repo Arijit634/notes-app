@@ -17,7 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.project.notes_backend.filter.RateLimitingFilter;
 import com.project.notes_backend.model.AppRole;
 import com.project.notes_backend.model.Role;
 import com.project.notes_backend.model.User;
@@ -40,6 +42,12 @@ public class SecurityConfig {
     @Lazy
     OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
+
+    @Autowired
+    private RateLimitingFilter rateLimitingFilter;
+
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
@@ -47,6 +55,9 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        // Configure CORS
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource));
+
         // Disable CSRF for stateless REST API using JWT tokens
         http.csrf(csrf -> csrf.disable());
 
@@ -58,12 +69,15 @@ public class SecurityConfig {
                 -> requests
                         // Public authentication endpoints - must be first
                         .requestMatchers("/auth/public/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/login**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        // Profile picture serving endpoint - public access
+                        .requestMatchers("/api/profile/picture/**").permitAll()
                         // H2 Console for database access
                         .requestMatchers("/h2-console/**").permitAll()
                         // Swagger/OpenAPI documentation endpoints
@@ -87,6 +101,7 @@ public class SecurityConfig {
         http.exceptionHandling(exception
                 -> exception.authenticationEntryPoint(unauthorizedHandler));
 
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(authenticationJwtTokenFilter(),
                 UsernamePasswordAuthenticationFilter.class);
 

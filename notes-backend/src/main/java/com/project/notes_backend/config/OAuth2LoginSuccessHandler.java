@@ -61,7 +61,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         try {
             // Find or create user
-            User user = findOrCreateUser(email, username, name, provider);
+            User user = findOrCreateUser(email, username, name, provider, attributes);
             System.out.println("User found/created: " + user.getUserName());
 
             // Generate JWT token by creating UserDetailsImpl from User
@@ -69,9 +69,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     = com.project.notes_backend.security.UserDetailsImpl.build(user);
             String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
-            // For testing without frontend, redirect to backend test endpoint
-            // String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
-            String targetUrl = UriComponentsBuilder.fromUriString(oauth2BaseUrl + "/auth/public/test")
+            // Redirect to frontend application with JWT token
+            String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                     .queryParam("token", jwtToken)
                     .queryParam("user", user.getUserName())
                     .queryParam("email", user.getEmail())
@@ -79,14 +78,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     .queryParam("success", "true")
                     .build().toUriString();
 
+            System.out.println("Redirecting to frontend: " + targetUrl);
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
         } catch (Exception e) {
             System.err.println("OAuth2 authentication error: " + e.getMessage());
             e.printStackTrace();
-            // Redirect to error page with more details
-            String errorUrl = oauth2BaseUrl + "/auth/public/test?error=oauth2_failed&message="
-                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+            // Redirect to frontend error page with error details
+            String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+                    .queryParam("error", "oauth2_failed")
+                    .queryParam("message", java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8))
+                    .queryParam("success", "false")
+                    .build().toUriString();
             getRedirectStrategy().sendRedirect(request, response, errorUrl);
         }
     }
@@ -162,24 +165,30 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         return username;
     }
 
-    private User findOrCreateUser(String email, String username, String name, String provider) {
+    private User findOrCreateUser(String email, String username, String name, String provider, Map<String, Object> attributes) {
         // First try to find by email
         Optional<User> existingUser = userRepository.findByEmail(email);
         if (existingUser.isPresent()) {
-            return existingUser.get();
+            User user = existingUser.get();
+            // Update profile picture if not set and available from OAuth
+            updateProfilePictureIfNeeded(user, provider, attributes);
+            return user;
         }
 
         // If not found, create new user
-        return createNewUser(email, username, name, provider);
+        return createNewUser(email, username, name, provider, attributes);
     }
 
-    private User createNewUser(String email, String username, String name, String provider) {
+    private User createNewUser(String email, String username, String name, String provider, Map<String, Object> attributes) {
         // Get default user role
         Role userRole = roleRepository.findByRoleName(AppRole.USER)
                 .orElseThrow(() -> new RuntimeException("Default USER role not found"));
 
         // Ensure unique username
         username = findAvailableUsername(username);
+
+        // Extract profile picture URL from OAuth provider
+        String profilePictureUrl = extractProfilePicture(provider, attributes);
 
         // Create new user
         User newUser = new User();
@@ -193,6 +202,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         newUser.setCredentialsNonExpired(true);
         newUser.setTwoFactorEnabled(false);
         newUser.setSignUpMethod(provider);
+        newUser.setProfilePicture(profilePictureUrl);
         newUser.setCreatedDate(LocalDateTime.now());
         newUser.setUpdatedDate(LocalDateTime.now());
         newUser.setAccountExpiryDate(LocalDate.now().plusYears(10));
@@ -220,5 +230,26 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Last resort - use timestamp
         return baseUsername.substring(0, Math.min(baseUsername.length(), 10))
                 + System.currentTimeMillis() % 10000;
+    }
+
+    private void updateProfilePictureIfNeeded(User user, String provider, Map<String, Object> attributes) {
+        if (user.getProfilePicture() == null) {
+            String profilePictureUrl = extractProfilePicture(provider, attributes);
+            if (profilePictureUrl != null) {
+                user.setProfilePicture(profilePictureUrl);
+                userRepository.save(user);
+            }
+        }
+    }
+
+    private String extractProfilePicture(String provider, Map<String, Object> attributes) {
+        switch (provider) {
+            case "google":
+                return (String) attributes.get("picture");
+            case "github":
+                return (String) attributes.get("avatar_url");
+            default:
+                return null;
+        }
     }
 }

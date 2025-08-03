@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +34,7 @@ import com.project.notes_backend.security.UserDetailsImpl;
 import com.project.notes_backend.security.jwt.JwtUtils;
 import com.project.notes_backend.security.request.LoginRequest;
 import com.project.notes_backend.security.request.SignupRequest;
+import com.project.notes_backend.security.request.TwoFactorLoginRequest;
 import com.project.notes_backend.security.response.LoginResponse;
 import com.project.notes_backend.security.response.MessageResponse;
 import com.project.notes_backend.security.response.UserInfoResponse;
@@ -44,6 +43,7 @@ import com.project.notes_backend.service.UserService;
 import com.project.notes_backend.util.AuthUtil;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -86,10 +86,23 @@ public class AuthController {
             return new ResponseEntity<Object>(map, HttpStatus.NOT_FOUND);
         }
 
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Check if user has 2FA enabled
+        User user = userRepository.findByUserName(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isTwoFactorEnabled()) {
+            // Return a special response indicating 2FA is required
+            Map<String, Object> response = new HashMap<>();
+            response.put("requires2FA", true);
+            response.put("message", "Two-factor authentication required");
+            response.put("username", userDetails.getUsername());
+            return ResponseEntity.ok(response);
+        }
+
 //      Set the authentication
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
@@ -104,6 +117,49 @@ public class AuthController {
 
         // Return the response entity with the JWT token included in the response body
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/public/signin-2fa")
+    public ResponseEntity<?> completeTwoFactorLogin(@RequestBody TwoFactorLoginRequest request) {
+        try {
+            // Find the user
+            User user = userRepository.findByUserName(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Verify 2FA code
+            int code = Integer.parseInt(request.getVerificationCode());
+            boolean isValidCode = totpService.verifyCode(user.getTwoFactorSecret(), code);
+            if (!isValidCode) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("message", "Invalid 2FA code");
+                errorResponse.put("status", false);
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            }
+
+            // Create authentication token
+            UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+
+            // Collect roles
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+
+            // Prepare the response
+            LoginResponse response = new LoginResponse(userDetails.getUsername(), roles, jwtToken);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "2FA login failed: " + e.getMessage());
+            errorResponse.put("status", false);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/public/signup")
@@ -172,7 +228,9 @@ public class AuthController {
                 user.getCredentialsExpiryDate(),
                 user.getAccountExpiryDate(),
                 user.isTwoFactorEnabled(),
-                roles
+                roles,
+                user.getProfilePicture(),
+                user.getSignUpMethod()
         );
 
         return ResponseEntity.ok().body(response);
@@ -283,24 +341,45 @@ public class AuthController {
     }
 
     @GetMapping("/public/test")
-    public ResponseEntity<?> publicTest() {
+    public ResponseEntity<?> publicTest(@RequestParam(required = false) String token,
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String provider,
+            @RequestParam(required = false) String success,
+            @RequestParam(required = false) String error,
+            @RequestParam(required = false) String message) {
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Public test endpoint working!");
-        response.put("timestamp", System.currentTimeMillis());
-        response.put("status", "success");
+
+        if ("true".equals(success)) {
+            response.put("status", "OAuth2 Success");
+            response.put("user", user);
+            response.put("email", email);
+            response.put("provider", provider);
+            response.put("tokenReceived", token != null);
+            response.put("message", "OAuth2 authentication completed successfully. In production, this would redirect to the frontend application.");
+        } else if (error != null) {
+            response.put("status", "OAuth2 Error");
+            response.put("error", error);
+            response.put("message", message);
+        } else {
+            response.put("status", "Test Endpoint");
+            response.put("message", "Public test endpoint working!");
+            response.put("timestamp", System.currentTimeMillis());
+        }
+
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/public/login")
     public ResponseEntity<?> loginPage(@RequestParam(required = false) String error, HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         // Build base URL dynamically
         String baseUrl = request.getScheme() + "://" + request.getServerName();
         if (request.getServerPort() != 80 && request.getServerPort() != 443) {
             baseUrl += ":" + request.getServerPort();
         }
-        
+
         if (error != null) {
             response.put("error", "OAuth2 authentication failed");
             response.put("message", "There was an issue with OAuth2 login. Please try again.");
@@ -312,6 +391,27 @@ public class AuthController {
         }
         response.put("timestamp", System.currentTimeMillis());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Logout endpoint - clears security context
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
+        try {
+            // Clear the security context
+            SecurityContextHolder.clearContext();
+
+            // Invalidate the session if it exists
+            if (request.getSession(false) != null) {
+                request.getSession().invalidate();
+            }
+
+            return ResponseEntity.ok(new MessageResponse("User logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error during logout: " + e.getMessage()));
+        }
     }
 
 }
