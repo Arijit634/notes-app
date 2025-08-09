@@ -299,11 +299,7 @@ export const notesAPI = {
   },
 
   getPublicNotes: async () => {
-    console.log('🌐 API: Calling getPublicNotes endpoint...');
-    console.log('🔗 API: Base URL:', API_CONFIG.BASE_URL);
-    console.log('🔗 API: Full URL:', `${API_CONFIG.BASE_URL}/api/notes/public`);
     const response = await apiClient.get('/api/notes/public');
-    console.log('✅ API: getPublicNotes response:', response.data);
     return response.data;
   },
 };

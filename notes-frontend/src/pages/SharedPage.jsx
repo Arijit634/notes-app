@@ -20,34 +20,25 @@ const SharedPage = () => {
   const [view, setView] = useState('grid');
 
   useEffect(() => {
-    console.log('📡 SharedPage: Dispatching fetchPublicNotes...');
     dispatch(fetchPublicNotes());
   }, [dispatch]);
 
   // Get all public notes from all users
   const sharedNotes = useMemo(() => {
-    console.log('📝 SharedPage: publicNotes from state:', publicNotes);
-    console.log('📊 SharedPage: publicNotes length:', publicNotes?.length || 0);
     return publicNotes || [];
   }, [publicNotes]);
 
   // Filter notes based on search
   const filteredNotes = useMemo(() => {
-    console.log('🔍 SharedPage: Filtering notes, sharedNotes:', sharedNotes);
-    if (!searchQuery) {
-      console.log('📋 SharedPage: No search query, returning all shared notes:', sharedNotes.length);
-      return sharedNotes;
-    }
+    if (!searchQuery) return sharedNotes;
     
     const query = searchQuery.toLowerCase();
-    const filtered = sharedNotes.filter(note =>
+    return sharedNotes.filter(note =>
       note.title?.toLowerCase().includes(query) ||
       note.content?.toLowerCase().includes(query) ||
       note.description?.toLowerCase().includes(query) ||
       note.category?.toLowerCase().includes(query)
     );
-    console.log('🔍 SharedPage: Filtered notes result:', filtered.length);
-    return filtered;
   }, [sharedNotes, searchQuery]);
 
   const handleViewNote = (note) => {
