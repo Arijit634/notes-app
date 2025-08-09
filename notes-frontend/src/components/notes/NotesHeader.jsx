@@ -62,7 +62,7 @@ const FilterMenu = ({ filters, onFilterChange }) => (
       leaveFrom="transform opacity-100 scale-100"
       leaveTo="transform opacity-0 scale-95"
     >
-      <Menu.Items className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none z-10">
+      <Menu.Items className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none z-10 max-w-[90vw] sm:max-w-none">
         <div className="p-3">
           <div className="space-y-3">
             <div>
@@ -178,7 +178,7 @@ const SortMenu = ({ sortBy, sortOrder, onSortChange }) => (
       leaveFrom="transform opacity-100 scale-100"
       leaveTo="transform opacity-0 scale-95"
     >
-      <Menu.Items className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none z-10">
+      <Menu.Items className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none z-10 max-w-[90vw] sm:max-w-none">
         <div className="p-2">
           {[
             { key: 'updatedAt', label: 'Last updated' },
@@ -235,7 +235,7 @@ const NotesHeader = ({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             My Notes
@@ -249,24 +249,25 @@ const NotesHeader = ({
           </p>
         </div>
         
-        <Button onClick={onCreateNote}>
+        <Button onClick={onCreateNote} className="w-full sm:w-auto">
           <PlusIcon className="w-4 h-4 mr-2" />
           New Note
         </Button>
       </div>
 
       {/* Search and Controls */}
-      <div className="flex items-center justify-between space-x-4">
-        <div className="flex-1 max-w-md">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 min-w-0">
           <Input
             placeholder="Search notes..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             leftIcon={<MagnifyingGlassIcon className="w-4 h-4" />}
+            className="w-full"
           />
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2">
           <FilterMenu
             filters={filters}
             onFilterChange={onFilterChange}

@@ -114,13 +114,14 @@ const OAuth2FAPage = () => {
           </div>
 
           <div className="text-center">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => navigate('/login')}
-              className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+              className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 min-h-[44px] px-4 py-2 touch-manipulation"
             >
-              Back to Login
-            </button>
+              Cancel & Back to Login
+            </Button>
           </div>
         </form>
       </motion.div>

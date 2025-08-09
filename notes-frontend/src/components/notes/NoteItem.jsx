@@ -1,13 +1,13 @@
 import {
-    CalendarIcon,
-    ClipboardIcon,
-    ClockIcon,
-    EyeIcon,
-    EyeSlashIcon,
-    HeartIcon,
-    PencilIcon,
-    TagIcon,
-    TrashIcon
+  CalendarIcon,
+  ClipboardIcon,
+  ClockIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  HeartIcon,
+  PencilIcon,
+  TagIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
@@ -88,7 +88,7 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
               size="sm"
               variant="ghost"
               onClick={() => onView(note)}
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 opacity-70 group-hover:opacity-100 transition-all"
               title="View note"
             >
               <EyeIcon className="w-4 h-4" />
@@ -97,7 +97,7 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
               size="sm"
               variant="ghost"
               onClick={() => onEdit(note)}
-              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 opacity-70 group-hover:opacity-100 transition-all"
               title="Edit note"
             >
               <PencilIcon className="w-4 h-4" />
@@ -106,7 +106,7 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
               size="sm"
               variant="ghost"
               onClick={() => onCopy(note)}
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 opacity-70 group-hover:opacity-100 transition-all"
               title="Copy to clipboard"
             >
               <ClipboardIcon className="w-4 h-4" />
@@ -118,7 +118,7 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
               className={`${isFavorite 
                 ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300' 
                 : 'text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400'
-              } hover:bg-red-50 dark:hover:bg-red-900/20 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all`}
+              } hover:bg-red-50 dark:hover:bg-red-900/20 opacity-70 group-hover:opacity-100 transition-all`}
               title={isFavorite ? "Remove from favorites" : "Add to favorites"}
             >
               {isFavorite ? (
@@ -132,7 +132,7 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
             size="sm"
             variant="ghost"
             onClick={() => onDelete(note)}
-            className="text-error-600 hover:text-error-700 dark:text-error-400 dark:hover:text-error-300 hover:bg-error-50 dark:hover:bg-error-900/20 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+            className="text-error-600 hover:text-error-700 dark:text-error-400 dark:hover:text-error-300 hover:bg-error-50 dark:hover:bg-error-900/20 opacity-70 group-hover:opacity-100 transition-all"
             title="Delete note"
           >
             <TrashIcon className="w-4 h-4" />
@@ -211,7 +211,7 @@ const NoteListItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1 opacity-70 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
+          <div className="flex items-center space-x-1 opacity-70 group-hover:opacity-100 transition-all">
             <Button
               size="sm"
               variant="ghost"

@@ -8,6 +8,12 @@ const tokenUtils = {
   setToken: (token) => localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token),
   getToken: () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
   removeToken: () => localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+  setRefreshToken: (token) => localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token),
+  getRefreshToken: () => localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+  clearTokens: () => {
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+  },
   setUserInfo: (userInfo) => localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(userInfo)),
   getUserInfo: () => {
     const userInfo = localStorage.getItem(STORAGE_KEYS.USER_INFO);

@@ -122,7 +122,7 @@ const CategoriesPage = () => {
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center">
               <div className="p-3 bg-primary-100 dark:bg-primary-900 rounded-lg">
@@ -248,7 +248,7 @@ const CategoriesPage = () => {
                         className="border-t border-gray-200 dark:border-gray-700"
                       >
                         <div className="p-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {notesWithFavorites.map((note) => (
                               <NoteGridItem
                                 key={note.id}
