@@ -137,11 +137,33 @@ apiClient.interceptors.response.use(
 export const authAPI = {
   login: async (credentials) => {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.SIGNIN, credentials);
+    
+    // Check if 2FA is required
+    if (response.data.requires2FA) {
+      return response.data; // Return 2FA required response
+    }
+    
+    // Normal login flow
     if (response.data.jwtToken) {
       tokenUtils.setToken(response.data.jwtToken);
       // Get user info after login
       const userInfo = await authAPI.getUserInfo();
-      tokenUtils.setUserInfo(userInfo.data);
+      tokenUtils.setUserInfo(userInfo);
+    }
+    return response.data;
+  },
+
+  completeTwoFactorLogin: async (username, verificationCode) => {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.SIGNIN_2FA, {
+      username,
+      verificationCode
+    });
+    
+    if (response.data.jwtToken) {
+      tokenUtils.setToken(response.data.jwtToken);
+      // Get user info after login
+      const userInfo = await authAPI.getUserInfo();
+      tokenUtils.setUserInfo(userInfo);
     }
     return response.data;
   },
@@ -153,7 +175,7 @@ export const authAPI = {
 
   getUserInfo: async () => {
     const response = await apiClient.get(API_ENDPOINTS.AUTH.USER_INFO);
-    return response;
+    return response.data;
   },
 
   getUsername: async () => {
@@ -311,6 +333,55 @@ export const adminAPI = {
 
   getAuditLogs: async (params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.ADMIN.AUDIT_LOGS, { params });
+    return response.data;
+  },
+};
+
+// Profile API
+export const profileAPI = {
+  getUserProfile: async () => {
+    const response = await apiClient.get(API_ENDPOINTS.PROFILE.BASE);
+    return response.data;
+  },
+
+  updateProfile: async (profileData) => {
+    const response = await apiClient.put(API_ENDPOINTS.PROFILE.BASE, profileData);
+    return response.data;
+  },
+
+  changePassword: async (passwordData) => {
+    const response = await apiClient.post(API_ENDPOINTS.PROFILE.CHANGE_PASSWORD, passwordData);
+    return response.data;
+  },
+
+  uploadProfilePicture: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(API_ENDPOINTS.PROFILE.UPLOAD_PICTURE, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  deleteProfilePicture: async () => {
+    const response = await apiClient.delete(API_ENDPOINTS.PROFILE.DELETE_PICTURE);
+    return response.data;
+  },
+
+  setupTwoFactor: async () => {
+    const response = await apiClient.post(API_ENDPOINTS.PROFILE.SETUP_2FA);
+    return response.data;
+  },
+
+  verifyTwoFactor: async (code) => {
+    const response = await apiClient.post(API_ENDPOINTS.PROFILE.VERIFY_2FA, { verificationCode: code });
+    return response.data;
+  },
+
+  disableTwoFactor: async (code) => {
+    const response = await apiClient.post(API_ENDPOINTS.PROFILE.DISABLE_2FA, { verificationCode: code });
     return response.data;
   },
 };

@@ -1,8 +1,8 @@
 import {
-    EyeIcon,
-    EyeSlashIcon,
-    LockClosedIcon,
-    UserIcon
+  EyeIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { motion } from 'framer-motion';
@@ -11,10 +11,11 @@ import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
 import { API_CONFIG, API_ENDPOINTS } from '../../constants/api';
-import { loginUser } from '../../store/slices/authSlice';
+import { clearError, loginUser } from '../../store/slices/authSlice';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import Input from '../common/Input';
+import TwoFactorModal from './TwoFactorModal';
 
 // Validation schema
 const loginSchema = yup.object({
@@ -30,7 +31,7 @@ const loginSchema = yup.object({
 
 const LoginForm = ({ onSwitchToRegister, onForgotPassword }) => {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector(state => state.auth);
+  const { loading, error, twoFactorRequired } = useSelector(state => state.auth);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -60,13 +61,19 @@ const LoginForm = ({ onSwitchToRegister, onForgotPassword }) => {
     window.location.href = oauthUrl;
   };
 
+  const handleCancel2FA = () => {
+    dispatch(clearError());
+    // Reset form or any other cleanup needed
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full max-w-md"
-    >
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
       <Card className="p-8">
         <div className="text-center mb-8">
           <div className="mx-auto w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center mb-4">
@@ -220,7 +227,12 @@ const LoginForm = ({ onSwitchToRegister, onForgotPassword }) => {
           </p>
         </div>
       </Card>
-    </motion.div>
+      </motion.div>
+
+      {twoFactorRequired && (
+        <TwoFactorModal onCancel={handleCancel2FA} />
+      )}
+    </>
   );
 };
 

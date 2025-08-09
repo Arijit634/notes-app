@@ -11,7 +11,7 @@ import lombok.Setter;
 public class UserInfoResponse {
 
     private Long id;
-    private String username;
+    private String userName;  // Changed to match frontend expectation
     private String email;
     private boolean accountNonLocked;
     private boolean accountNonExpired;
@@ -21,12 +21,15 @@ public class UserInfoResponse {
     private LocalDate accountExpiryDate;
     private boolean isTwoFactorEnabled;
     private List<String> roles;
+    private String profilePicture;  // Added for frontend
+    private String signUpMethod;    // Added for frontend
 
-    public UserInfoResponse(Long id, String username, String email, boolean accountNonLocked, boolean accountNonExpired,
+    public UserInfoResponse(Long id, String userName, String email, boolean accountNonLocked, boolean accountNonExpired,
             boolean credentialsNonExpired, boolean enabled, LocalDate credentialsExpiryDate,
-            LocalDate accountExpiryDate, boolean isTwoFactorEnabled, List<String> roles) {
+            LocalDate accountExpiryDate, boolean isTwoFactorEnabled, List<String> roles,
+            String profilePicture, String signUpMethod) {
         this.id = id;
-        this.username = username;
+        this.userName = userName;
         this.email = email;
         this.accountNonLocked = accountNonLocked;
         this.accountNonExpired = accountNonExpired;
@@ -36,5 +39,7 @@ public class UserInfoResponse {
         this.accountExpiryDate = accountExpiryDate;
         this.isTwoFactorEnabled = isTwoFactorEnabled;
         this.roles = roles;
+        this.profilePicture = profilePicture;
+        this.signUpMethod = signUpMethod;
     }
 }

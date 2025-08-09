@@ -45,7 +45,7 @@ public class NoteServiceImpl implements NoteService {
     private UserActivityService userActivityService;
 
     @Override
-    @CacheEvict(value = "userNotes", allEntries = true)
+    @CacheEvict(value = {"userNotes", "userStats"}, allEntries = true)
     public NoteResponseDTO createNoteForUser(String username, NoteRequestDTO noteRequest) {
         log.info("Creating note for user: {}", username);
 
@@ -99,7 +99,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    @CacheEvict(value = "userNotes", allEntries = true)
+    @CacheEvict(value = {"userNotes", "userStats"}, allEntries = true)
     public NoteResponseDTO updateNoteForUser(Long noteId, NoteRequestDTO noteRequest, String username) {
         log.info("Updating note ID: {} for user: {}", noteId, username);
 
@@ -126,7 +126,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    @CacheEvict(value = "userNotes", allEntries = true)
+    @CacheEvict(value = {"userNotes", "userStats"}, allEntries = true)
     public void deleteNoteForUser(Long noteId, String username) {
         log.info("Deleting note ID: {} for user: {}", noteId, username);
 
@@ -134,6 +134,20 @@ public class NoteServiceImpl implements NoteService {
                 .orElseThrow(() -> new RuntimeException("Note not found"));
 
         validateNoteOwnership(note, username);
+
+        // Store note info before deletion for activity logging
+        String noteTitle = note.getTitle();
+        Long noteIdForActivity = note.getId();
+
+        // Log user activity for deletion BEFORE deleting the note
+        try {
+            log.info("Logging delete activity for note: {} by user: {}", noteIdForActivity, username);
+            userActivityService.logActivity(username, UserActivity.ActivityType.DELETED, "note",
+                    noteIdForActivity, noteTitle);
+            log.info("Successfully logged delete activity for note: {} by user: {}", noteIdForActivity, username);
+        } catch (Exception e) {
+            log.error("Failed to log delete activity for note: {} by user: {}, error: {}", noteIdForActivity, username, e.getMessage());
+        }
 
         auditLogService.logNoteDeletion(username, noteId);
         noteRepository.delete(note);
@@ -160,6 +174,8 @@ public class NoteServiceImpl implements NoteService {
 
         // Basic counts
         long totalNotes = noteRepository.countByOwnerUsername(username);
+        long notesThisWeek = noteRepository.countByOwnerUsernameAndCreatedAtAfter(
+                username, LocalDateTime.now().minusWeeks(1));
         long notesThisMonth = noteRepository.countByOwnerUsernameAndCreatedAtAfter(
                 username, LocalDateTime.now().minusMonths(1));
 
@@ -171,12 +187,14 @@ public class NoteServiceImpl implements NoteService {
         LocalDateTime lastActivity = noteRepository.getLastActivityByOwnerUsername(username);
 
         stats.put("totalNotes", totalNotes);
+        stats.put("notesThisWeek", notesThisWeek);
         stats.put("notesThisMonth", notesThisMonth);
         stats.put("averageContentLength", avgContentLength != null ? Math.round(avgContentLength) : 0);
         stats.put("totalCharacters", totalCharacters != null ? totalCharacters : 0L);
         stats.put("lastActivity", lastActivity);
         stats.put("hasNotes", totalNotes > 0);
 
+        log.debug("Returning stats: {}", stats);
         return stats;
     }
 
@@ -218,7 +236,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    @CacheEvict(value = "userNotes", allEntries = true)
+    @CacheEvict(value = {"userNotes", "userStats"}, allEntries = true)
     public NoteResponseDTO toggleFavorite(Long noteId, String username) {
         log.info("Toggling favorite status for note: {} by user: {}", noteId, username);
 

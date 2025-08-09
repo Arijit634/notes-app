@@ -183,14 +183,14 @@ const ActivityTimelineItem = ({ activity }) => {
         }`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-gray-100">
+        <div className="text-sm text-gray-900 dark:text-gray-100">
           <span className="font-medium">{display.actionText}</span>{' '}
           <span className="text-gray-600 dark:text-gray-400">
-            "{activity.resourceTitle || 'Untitled Note'}"
+            "<span className="inline-block max-w-[200px] truncate align-bottom">{activity.resourceTitle || 'Untitled Note'}</span>"
           </span>
-        </p>
+        </div>
         {activity.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
             {activity.description}
           </p>
         )}
