@@ -157,7 +157,7 @@ class NoteServiceImplTest {
         when(noteRepository.findByOwnerUsernameOrderByCreatedAtDesc("testuser", pageable))
                 .thenReturn(notePage);
 
-        Page<NoteResponseDTO> result = noteService.getNotesForUser("testuser", null, pageable);
+        Page<NoteResponseDTO> result = noteService.getNotesForUser("testuser", null, null, false, "createdAt", "desc", pageable);
 
         assertNotNull(result);
         assertTrue(result.getContent().size() >= 0); // May be empty or have content

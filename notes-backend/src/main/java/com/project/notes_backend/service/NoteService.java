@@ -16,7 +16,7 @@ public interface NoteService {
 
     void deleteNoteForUser(Long noteId, String username);
 
-    Page<NoteResponseDTO> getNotesForUser(String username, String search, Pageable pageable);
+    Page<NoteResponseDTO> getNotesForUser(String username, String search, String category, boolean shared, String sortBy, String sortOrder, Pageable pageable);
 
     NoteResponseDTO getNoteByIdForUser(Long noteId, String username);
 

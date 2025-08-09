@@ -111,7 +111,7 @@ class NoteControllerTest {
     void testGetAllNotes() throws Exception {
         Page<NoteResponseDTO> notePage = new PageImpl<>(List.of(noteResponseDTO));
 
-        when(noteService.getNotesForUser(eq("testuser"), isNull(), any(PageRequest.class)))
+        when(noteService.getNotesForUser(eq("testuser"), isNull(), isNull(), eq(false), eq("updatedAt"), eq("desc"), any(PageRequest.class)))
                 .thenReturn(notePage);
 
         mockMvc.perform(get("/api/notes?page=0&size=10")
@@ -119,7 +119,7 @@ class NoteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Test Note"));
 
-        verify(noteService, times(1)).getNotesForUser(eq("testuser"), isNull(), any(PageRequest.class));
+        verify(noteService, times(1)).getNotesForUser(eq("testuser"), isNull(), isNull(), eq(false), eq("updatedAt"), eq("desc"), any(PageRequest.class));
     }
 
     @Test
