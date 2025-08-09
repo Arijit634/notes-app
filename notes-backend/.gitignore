@@ -128,7 +128,6 @@ certificates/
 
 
 # Email and external service configurations
-*mail*
 *smtp*
 *secret*
 
