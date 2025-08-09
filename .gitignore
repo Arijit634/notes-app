@@ -37,3 +37,4 @@ logs/
 !README.md
 
 *.jar
+*.txt
