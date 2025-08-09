@@ -1,15 +1,7 @@
 import {
   CalendarIcon,
-  Clipboar          <div className="flex items-center space-x-1">
-            {note.public ? (
-              <EyeIcon className="w-4 h-4 text-success-500" />
-            ) : (
-              <EyeSlashIcon className="w-4 h-4 text-gray-400" />
-            )}
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {note.public ? 'Public' : 'Private'}
-            </span>
-          </div>ClockIcon,
+  ClipboardIcon,
+  ClockIcon,
   EyeIcon,
   EyeSlashIcon,
   HeartIcon,
@@ -44,13 +36,13 @@ const NoteGridItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
             {note.title || 'Untitled Note'}
           </h3>
           <div className="flex items-center space-x-2 mt-1">
-            {note.shared ? (
+            {note.public ? (
               <EyeIcon className="w-4 h-4 text-success-500" />
             ) : (
               <EyeSlashIcon className="w-4 h-4 text-gray-400" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {note.shared ? 'Shared' : 'Private'}
+              {note.public ? 'Public' : 'Private'}
             </span>
           </div>
         </div>

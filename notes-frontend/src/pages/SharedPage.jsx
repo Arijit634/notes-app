@@ -1,5 +1,6 @@
 import { ShareIcon } from '@heroicons/react/24/outline';
 import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, Spinner } from '../components/common';
 import Button from '../components/common/Button';
@@ -7,51 +8,72 @@ import Input from '../components/common/Input';
 import { NoteGridItem, NoteListItem } from '../components/notes/NoteItem';
 import { useCopyToClipboard } from '../hooks';
 import { toggleFavorite } from '../store/slices/favoritesSlice';
-import { fetchNotes } from '../store/slices/notesSlice';
+import { fetchPublicNotes } from '../store/slices/notesSlice';
 
 const SharedPage = () => {
   const dispatch = useDispatch();
-  const { notes, loading } = useSelector(state => state.notes);
+  const { publicNotes, loading } = useSelector(state => state.notes);
+  const { user } = useSelector(state => state.auth);
   const favoriteIds = useSelector(state => state.favorites.favoriteIds);
   const { copyToClipboard } = useCopyToClipboard();
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('grid');
 
   useEffect(() => {
-    dispatch(fetchNotes());
+    console.log('📡 SharedPage: Dispatching fetchPublicNotes...');
+    dispatch(fetchPublicNotes());
   }, [dispatch]);
 
-  // Filter shared notes
+  // Get all public notes from all users
   const sharedNotes = useMemo(() => {
-    return notes.filter(note => note.shared || note.isShared);
-  }, [notes]);
+    console.log('📝 SharedPage: publicNotes from state:', publicNotes);
+    console.log('📊 SharedPage: publicNotes length:', publicNotes?.length || 0);
+    return publicNotes || [];
+  }, [publicNotes]);
 
   // Filter notes based on search
   const filteredNotes = useMemo(() => {
-    if (!searchQuery) return sharedNotes;
+    console.log('🔍 SharedPage: Filtering notes, sharedNotes:', sharedNotes);
+    if (!searchQuery) {
+      console.log('📋 SharedPage: No search query, returning all shared notes:', sharedNotes.length);
+      return sharedNotes;
+    }
     
     const query = searchQuery.toLowerCase();
-    return sharedNotes.filter(note =>
+    const filtered = sharedNotes.filter(note =>
       note.title?.toLowerCase().includes(query) ||
       note.content?.toLowerCase().includes(query) ||
       note.description?.toLowerCase().includes(query) ||
       note.category?.toLowerCase().includes(query)
     );
+    console.log('🔍 SharedPage: Filtered notes result:', filtered.length);
+    return filtered;
   }, [sharedNotes, searchQuery]);
 
   const handleViewNote = (note) => {
-    // Handle view note
+    // Public notes are read-only - just show a toast or modal with content
     console.log('View note:', note);
+    // TODO: Implement read-only view modal for public notes
   };
 
   const handleEditNote = (note) => {
-    // Handle edit note
-    console.log('Edit note:', note);
+    // Only allow editing if the current user owns the note
+    if (note.ownerUsername === user?.username) {
+      console.log('Edit note:', note);
+      // TODO: Implement edit functionality for own notes
+    } else {
+      toast.error('You can only edit your own notes');
+    }
   };
 
   const handleDeleteNote = (note) => {
-    // Handle delete note
-    console.log('Delete note:', note);
+    // Only allow deleting if the current user owns the note
+    if (note.ownerUsername === user?.username) {
+      console.log('Delete note:', note);
+      // TODO: Implement delete functionality for own notes
+    } else {
+      toast.error('You can only delete your own notes');
+    }
   };
 
   const handleCopyNote = async (note) => {
@@ -189,17 +211,19 @@ const SharedPage = () => {
             {view === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredNotes.map((note) => {
-                  const isFavorite = favoriteIds.includes(note.id);
+                  const isFavorite = note.favorite; // Use backend data directly
+                  const canEdit = note.ownerUsername === user?.username;
                   return (
                     <NoteGridItem
                       key={note.id}
                       note={note}
                       onView={handleViewNote}
-                      onEdit={handleEditNote}
-                      onDelete={handleDeleteNote}
+                      onEdit={canEdit ? handleEditNote : null}
+                      onDelete={canEdit ? handleDeleteNote : null}
                       onCopy={handleCopyNote}
                       onToggleFavorite={handleToggleFavorite}
                       isFavorite={isFavorite}
+                      isReadOnly={!canEdit}
                     />
                   );
                 })}
@@ -207,17 +231,19 @@ const SharedPage = () => {
             ) : (
               <div className="space-y-4">
                 {filteredNotes.map((note) => {
-                  const isFavorite = favoriteIds.includes(note.id);
+                  const isFavorite = note.favorite;
+                  const canEdit = note.ownerUsername === user?.username;
                   return (
                     <NoteListItem
                       key={note.id}
                       note={note}
                       onView={handleViewNote}
-                      onEdit={handleEditNote}
-                      onDelete={handleDeleteNote}
+                      onEdit={canEdit ? handleEditNote : null}
+                      onDelete={canEdit ? handleDeleteNote : null}
                       onCopy={handleCopyNote}
                       onToggleFavorite={handleToggleFavorite}
                       isFavorite={isFavorite}
+                      isReadOnly={!canEdit}
                     />
                   );
                 })}

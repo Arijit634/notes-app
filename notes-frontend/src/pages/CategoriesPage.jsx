@@ -202,7 +202,7 @@ const CategoriesPage = () => {
               const isExpanded = expandedCategories.has(category.name);
               const notesWithFavorites = category.notes.map(note => ({
                 ...note,
-                favorite: favoriteIds.includes(note.id)
+                favorite: note.favorite // Use backend data directly
               }));
 
               return (
@@ -258,7 +258,7 @@ const CategoriesPage = () => {
                                 onDelete={handleDeleteNote}
                                 onCopy={(note) => navigator.clipboard.writeText(note.content)}
                                 onToggleFavorite={handleToggleFavorite}
-                                isFavorite={favoriteIds.includes(note.id)}
+                                isFavorite={note.favorite}
                                 compact={true}
                               />
                             ))}

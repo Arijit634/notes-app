@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { notesAPI } from '../../services/api';
+import { updateNoteInList } from './notesSlice';
 
 // Async thunk for force-refreshing favorites (bypasses cache)
 export const refreshFavorites = createAsyncThunk(
@@ -191,15 +192,33 @@ export const {
 
 // Enhanced toggle function with optimistic updates
 export const toggleFavorite = (noteId, noteData = null) => async (dispatch, getState) => {
-  // Optimistic update for immediate UI feedback
+  // Get current state to determine if it's currently favorite
+  const state = getState();
+  const isCurrentlyFavorite = state.favorites.favoriteIds.includes(noteId);
+  
+  // Optimistic update for immediate UI feedback in favorites slice
   dispatch(optimisticToggleFavorite({ noteId, noteData }));
+  
+  // Also update the note in the notes slice for immediate UI feedback
+  if (noteData) {
+    const updatedNote = { ...noteData, favorite: !isCurrentlyFavorite };
+    dispatch(updateNoteInList(updatedNote));
+  }
   
   try {
     // Background API call
-    await dispatch(toggleFavoriteAsync(noteId)).unwrap();
+    const result = await dispatch(toggleFavoriteAsync(noteId)).unwrap();
+    
+    // Update the note in notes slice with the actual backend response
+    if (result) {
+      dispatch(updateNoteInList(result));
+    }
   } catch (error) {
-    // Revert optimistic update on error
+    // Revert optimistic updates on error
     dispatch(optimisticToggleFavorite({ noteId, noteData }));
+    if (noteData) {
+      dispatch(updateNoteInList(noteData)); // Revert to original state
+    }
     console.error('Failed to update favorite:', error);
   }
 };
