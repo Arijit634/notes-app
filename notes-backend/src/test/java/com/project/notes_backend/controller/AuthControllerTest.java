@@ -715,7 +715,7 @@ class AuthControllerTest {
     @Test
     void testPublicTest_Success() {
         // Act
-        ResponseEntity<?> response = authController.publicTest();
+        ResponseEntity<?> response = authController.publicTest(null, null, null, null, null, null, null);
 
         // Assert
         assertEquals(200, response.getStatusCode().value());

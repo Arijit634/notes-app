@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:s3": "cross-env NODE_ENV=production vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:s3": "powershell -ExecutionPolicy Bypass -File .\\deploy-to-s3.ps1"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",

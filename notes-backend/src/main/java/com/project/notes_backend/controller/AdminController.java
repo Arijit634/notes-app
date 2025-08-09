@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.notes_backend.dto.UserDTO;
 import com.project.notes_backend.model.Role;
 import com.project.notes_backend.model.User;
+import com.project.notes_backend.service.ActivityCleanupService;
 import com.project.notes_backend.service.UserService;
 
 @RestController
@@ -25,6 +27,9 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ActivityCleanupService activityCleanupService;
 
     @GetMapping("/getusers")
     public ResponseEntity<List<User>> getUsers() {
@@ -101,6 +106,27 @@ public class AdminController {
     public ResponseEntity<List<Role>> getAllRoles() {
         try {
             return new ResponseEntity<>(userService.getAllRoles(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Activity Management Endpoints
+    @PostMapping("/activities/cleanup")
+    public ResponseEntity<String> performActivityCleanup() {
+        try {
+            int deletedCount = activityCleanupService.performManualCleanup();
+            return new ResponseEntity<>("Activity cleanup completed. Deleted " + deletedCount + " activities.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error during activity cleanup: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/activities/stats")
+    public ResponseEntity<ActivityCleanupService.ActivityCleanupStats> getActivityStats() {
+        try {
+            ActivityCleanupService.ActivityCleanupStats stats = activityCleanupService.getCleanupStats();
+            return new ResponseEntity<>(stats, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
