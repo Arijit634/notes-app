@@ -311,6 +311,12 @@ const authSlice = createSlice({
       state.user = { ...state.user, ...action.payload };
       userUtils.setUserInfo(state.user);
     },
+    updateUserInfo: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        userUtils.setUserInfo(state.user);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -528,7 +534,8 @@ export const {
   clearError, 
   setTwoFactorRequired, 
   setEmailVerificationRequired, 
-  updateUser 
+  updateUser,
+  updateUserInfo
 } = authSlice.actions;
 
 export default authSlice.reducer;

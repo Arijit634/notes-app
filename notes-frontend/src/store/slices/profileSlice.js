@@ -40,9 +40,14 @@ export const changePassword = createAsyncThunk(
 
 export const uploadProfilePicture = createAsyncThunk(
   'profile/uploadProfilePicture',
-  async (file, { rejectWithValue }) => {
+  async (file, { rejectWithValue, dispatch }) => {
     try {
       const response = await profileAPI.uploadProfilePicture(file);
+      
+      // Update user info in auth slice
+      const { updateUserInfo } = await import('./authSlice');
+      dispatch(updateUserInfo({ profilePicture: response }));
+      
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to upload profile picture');
@@ -52,9 +57,14 @@ export const uploadProfilePicture = createAsyncThunk(
 
 export const deleteProfilePicture = createAsyncThunk(
   'profile/deleteProfilePicture',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const response = await profileAPI.deleteProfilePicture();
+      
+      // Update user info in auth slice
+      const { updateUserInfo } = await import('./authSlice');
+      dispatch(updateUserInfo({ profilePicture: null }));
+      
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete profile picture');

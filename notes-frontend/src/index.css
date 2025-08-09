@@ -176,6 +176,33 @@
   .mobile-tap-highlight {
     -webkit-tap-highlight-color: transparent;
   }
+  
+  /* Enhanced mobile touch utilities */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Mobile overlay improvements */
+  .mobile-overlay {
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+  
+  /* Mobile button improvements */
+  .mobile-button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
 }
 button:focus,
 button:focus-visible {

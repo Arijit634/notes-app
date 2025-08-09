@@ -6,5 +6,5 @@ export { default as NotesPage } from './NotesPage';
 export { default as OAuth2FAPage } from './OAuth2FAPage';
 export { default as OAuthSuccessPage } from './OAuthSuccessPage';
 export { default as ProfilePage } from './ProfilePage';
-export { default as SharedPage } from './SharedPage';
+export { default as PublicNotesPage } from './PublicNotesPage';
 

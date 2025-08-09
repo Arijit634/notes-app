@@ -297,6 +297,11 @@ export const notesAPI = {
     const response = await apiClient.get('/api/notes/favorites', { params });
     return response.data;
   },
+
+  getPublicNotes: async () => {
+    const response = await apiClient.get('/api/notes/public');
+    return response.data;
+  },
 };
 
 // Activities API

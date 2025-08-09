@@ -57,6 +57,8 @@ public class NoteServiceImpl implements NoteService {
         note.setTitle(noteRequest.getTitle());
         note.setDescription(noteRequest.getDescription());
         note.setCategory(noteRequest.getCategory());
+        note.setFavorite(noteRequest.getIsFavorite() != null ? noteRequest.getIsFavorite() : false);
+        note.setIsPublic(noteRequest.getIsPublic() != null ? noteRequest.getIsPublic() : false);
         note.setOwner(user);
         note.setOwnerUsername(username); // For backward compatibility
 
@@ -137,6 +139,8 @@ public class NoteServiceImpl implements NoteService {
         note.setTitle(noteRequest.getTitle());
         note.setDescription(noteRequest.getDescription());
         note.setCategory(noteRequest.getCategory());
+        note.setFavorite(noteRequest.getIsFavorite() != null ? noteRequest.getIsFavorite() : note.isFavorite());
+        note.setIsPublic(noteRequest.getIsPublic() != null ? noteRequest.getIsPublic() : note.getIsPublic());
 
         Note updatedNote = noteRepository.save(note);
         auditLogService.logNoteUpdate(username, updatedNote);
@@ -239,6 +243,7 @@ public class NoteServiceImpl implements NoteService {
         dto.setShared(note.isShared());
         dto.setShareCount(note.getShareCount());
         dto.setFavorite(note.isFavorite());
+        dto.setPublic(note.getIsPublic() != null ? note.getIsPublic() : false);
         return dto;
     }
 
@@ -294,5 +299,14 @@ public class NoteServiceImpl implements NoteService {
         Page<Note> favoriteNotes = noteRepository.findByOwnerUsernameAndIsFavoriteTrue(username, pageable);
 
         return favoriteNotes.map(this::convertToResponseDTO);
+    }
+
+    @Override
+    public Page<NoteResponseDTO> getPublicNotes(Pageable pageable) {
+        log.info("Fetching public notes");
+
+        Page<Note> publicNotes = noteRepository.findByIsPublicTrue(pageable);
+
+        return publicNotes.map(this::convertToResponseDTO);
     }
 }

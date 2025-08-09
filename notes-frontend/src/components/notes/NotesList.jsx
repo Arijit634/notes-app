@@ -64,6 +64,8 @@ const NotesList = ({ initialEditNote }) => {
       filtered = filtered.filter(note => 
         note.title.toLowerCase().includes(query) ||
         note.content.toLowerCase().includes(query) ||
+        note.description?.toLowerCase().includes(query) ||
+        note.category?.toLowerCase().includes(query) ||
         note.tags?.some(tag => tag.toLowerCase().includes(query))
       );
     }

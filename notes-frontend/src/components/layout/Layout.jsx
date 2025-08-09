@@ -15,7 +15,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile, useKeyboardShortcut } from '../../hooks';
 import { useMobileScroll, useMobileTouchHandlers } from '../../hooks/useMobileScroll';
 import { logoutUser } from '../../store/slices/authSlice';
-import { toggleMobileMenu, toggleSidebar, toggleTheme } from '../../store/slices/uiSlice';
+import { setMobileMenuOpen, toggleMobileMenu, toggleSidebar, toggleTheme } from '../../store/slices/uiSlice';
 import { cn } from '../../utils/ui';
 import { Avatar, Badge } from '../common';
 import Button from '../common/Button';
@@ -41,7 +41,8 @@ const Layout = ({ children }) => {
   const { user, isAuthenticated } = useSelector(state => state.auth);
 
   // Use mobile scroll hook to prevent body scroll when mobile menu is open
-  useMobileScroll(isMobile && mobileMenuOpen);
+  const shouldPreventScroll = isMobile && mobileMenuOpen;
+  useMobileScroll(shouldPreventScroll);
   
   // Enhance touch interactions
   useMobileTouchHandlers();
@@ -91,51 +92,27 @@ const Layout = ({ children }) => {
     return <div className="min-h-screen bg-gray-50 dark:bg-gray-950">{children}</div>;
   }
 
+  // Debug logging for state
+  const shouldShowSidebar = isMobile ? mobileMenuOpen : (sidebarOpen || mobileMenuOpen);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
       {/* Sidebar */}
       <AnimatePresence>
-        {(sidebarOpen || mobileMenuOpen) && (
-          <>
-            {/* Mobile overlay */}
-            {isMobile && (
-              <motion.div
-                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  dispatch(toggleMobileMenu());
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  dispatch(toggleMobileMenu());
-                }}
-                style={{
-                  WebkitOverflowScrolling: 'touch',
-                  touchAction: 'manipulation',
-                  cursor: 'pointer'
-                }}
-              />
+        {shouldShowSidebar && (
+          <motion.aside
+            className={cn(
+              'fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col',
+              {
+                'lg:translate-x-0': sidebarOpen,
+                'lg:-translate-x-full': !sidebarOpen,
+              }
             )}
-            
-            {/* Sidebar */}
-            <motion.aside
-              className={cn(
-                'fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col',
-                {
-                  'lg:translate-x-0': sidebarOpen,
-                  'lg:-translate-x-full': !sidebarOpen,
-                }
-              )}
-              initial={isMobile ? { x: -256 } : false}
-              animate={isMobile ? { x: 0 } : false}
-              exit={isMobile ? { x: -256 } : false}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            >
+            initial={isMobile ? { x: -256 } : false}
+            animate={isMobile ? { x: 0 } : false}
+            exit={isMobile ? { x: -256 } : false}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
               {/* Sidebar Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center space-x-3">
@@ -150,7 +127,10 @@ const Layout = ({ children }) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => dispatch(toggleMobileMenu())}
+                    onClick={() => {
+                      dispatch(setMobileMenuOpen(false));
+                    }}
+                    className="mobile-button"
                   >
                     <XMarkIcon className="w-5 h-5" />
                   </Button>
@@ -184,10 +164,10 @@ const Layout = ({ children }) => {
                   isActive={location.pathname === '/categories'}
                 />
                 <SidebarLink 
-                  href="/shared" 
-                  icon="🔗" 
-                  label="Shared" 
-                  isActive={location.pathname === '/shared'}
+                  href="/public" 
+                  icon="🌐" 
+                  label="Public Notes" 
+                  isActive={location.pathname === '/public'}
                 />
                 <SidebarLink 
                   href="/profile" 
@@ -238,7 +218,25 @@ const Layout = ({ children }) => {
                 </div>
               </div>
             </motion.aside>
-          </>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile overlay - positioned after sidebar */}
+      <AnimatePresence>
+        {isMobile && shouldShowSidebar && (
+          <motion.div
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              dispatch(setMobileMenuOpen(false));
+            }}
+            style={{
+              pointerEvents: 'auto',
+              cursor: 'pointer'
+            }}
+          />
         )}
       </AnimatePresence>
 
@@ -251,17 +249,10 @@ const Layout = ({ children }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={() => {
                   isMobile ? dispatch(toggleMobileMenu()) : dispatch(toggleSidebar());
                 }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  isMobile ? dispatch(toggleMobileMenu()) : dispatch(toggleSidebar());
-                }}
-                className="touch-manipulation min-h-[44px] min-w-[44px]"
+                className="mobile-button"
               >
                 <Bars3Icon className="w-5 h-5" />
               </Button>

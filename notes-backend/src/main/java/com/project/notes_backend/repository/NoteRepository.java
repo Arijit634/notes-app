@@ -101,4 +101,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // Favorites queries
     Page<Note> findByOwnerUsernameAndIsFavoriteTrue(String ownerUsername, Pageable pageable);
+
+    // Public notes queries
+    Page<Note> findByIsPublicTrue(Pageable pageable);
 }

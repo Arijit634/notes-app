@@ -6,6 +6,7 @@ import { notesAPI } from '../../services/api';
 // Initial state
 const initialState = {
   notes: [],
+  publicNotes: [],
   currentNote: null,
   loading: false,
   creating: false,
@@ -189,6 +190,19 @@ export const fetchNoteStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await notesAPI.getNotesStats();
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || ERROR_MESSAGES.GENERIC_ERROR;
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const fetchPublicNotes = createAsyncThunk(
+  'notes/fetchPublicNotes',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await notesAPI.getPublicNotes();
       return response;
     } catch (error) {
       const errorMessage = error.response?.data?.message || ERROR_MESSAGES.GENERIC_ERROR;
@@ -438,6 +452,20 @@ const notesSlice = createSlice({
       // Fetch stats
       .addCase(fetchNoteStats.fulfilled, (state, action) => {
         state.stats = action.payload;
+      })
+      
+      // Fetch public notes
+      .addCase(fetchPublicNotes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPublicNotes.fulfilled, (state, action) => {
+        state.loading = false;
+        state.publicNotes = action.payload;
+      })
+      .addCase(fetchPublicNotes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       
       // TODO: Implement export notes in backend
