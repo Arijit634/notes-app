@@ -31,7 +31,7 @@ const DashboardPage = () => {
       .slice(0, 4)
       .map(note => ({
         ...note,
-        favorite: favoriteIds.includes(note.id)
+        favorite: note.favorite
       }));
   }, [notes, favoriteIds]);
 

@@ -14,11 +14,14 @@ const PublicNotesPage = () => {
   const { publicNotes, loading, error } = useSelector(state => state.notes);
 
   useEffect(() => {
+    console.log('📡 PublicNotesPage: Dispatching fetchPublicNotes...');
     dispatch(fetchPublicNotes());
   }, [dispatch]);
 
   // Ensure publicNotes is always an array
   const notesArray = Array.isArray(publicNotes) ? publicNotes : [];
+  console.log('📝 PublicNotesPage: publicNotes from state:', publicNotes);
+  console.log('📊 PublicNotesPage: notesArray length:', notesArray.length);
 
   const filteredNotes = notesArray.filter(note => {
     const matchesSearch = searchQuery === '' || 
@@ -30,6 +33,9 @@ const PublicNotesPage = () => {
     
     return matchesSearch && matchesCategory;
   });
+  
+  console.log('🔍 PublicNotesPage: Filtered notes result:', filteredNotes.length);
+  console.log('🔍 PublicNotesPage: Sample filtered notes:', filteredNotes.slice(0, 2));
 
   const categories = [...new Set(notesArray.map(note => note.category).filter(Boolean))];
 

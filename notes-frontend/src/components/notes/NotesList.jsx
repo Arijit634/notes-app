@@ -75,7 +75,7 @@ const NotesList = ({ initialEditNote }) => {
       filtered = filtered.filter(note => note.category === filters.category);
     }
     if (filters.favorites) {
-      filtered = filtered.filter(note => favoriteIds.includes(note.id));
+      filtered = filtered.filter(note => note.favorite); // Use backend data directly
     }
     if (filters.public) {
       filtered = filtered.filter(note => note.public);
@@ -280,7 +280,7 @@ const NotesList = ({ initialEditNote }) => {
         >
           <AnimatePresence>
             {filteredNotes.map((note) => {
-              const isFavorite = favoriteIds.includes(note.id);
+              const isFavorite = note.favorite; // Use backend data directly instead of Redux state
               
               return view === 'grid' ? (
                 <NoteGridItem
