@@ -322,6 +322,35 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/public/oauth2/verify-2fa")
+    public ResponseEntity<?> verifyOAuth2FA(@RequestParam int code,
+            @RequestParam String username) {
+        try {
+            User user = userService.findByUsername(username);
+            boolean isValid = userService.validate2FACode(user.getUserId(), code);
+
+            if (isValid) {
+                // Generate JWT token after successful 2FA verification
+                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+                String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "OAuth2 2FA verification successful");
+                response.put("token", jwtToken);
+                response.put("username", user.getUserName());
+                response.put("email", user.getEmail());
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Invalid 2FA code"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "2FA verification failed: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/oauth2/success")
     public ResponseEntity<?> oauth2Success(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails != null) {

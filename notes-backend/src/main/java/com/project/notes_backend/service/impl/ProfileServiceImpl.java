@@ -165,17 +165,31 @@ public class ProfileServiceImpl implements ProfileService {
             throw new RuntimeException("2FA setup not initiated. Please setup 2FA first.");
         }
 
-        // Verify the code
-        boolean isValid = googleAuthenticator.authorize(user.getTwoFactorSecret(),
-                Integer.parseInt(request.getVerificationCode()));
+        // Verify the code - handle potential parsing issues
+        try {
+            String codeStr = request.getVerificationCode().trim();
+            // Remove any non-digit characters
+            codeStr = codeStr.replaceAll("[^0-9]", "");
 
-        if (isValid) {
-            user.setTwoFactorEnabled(true);
-            userRepository.save(user);
-            log.info("2FA enabled successfully for user: {}", username);
-            return true;
-        } else {
-            log.warn("Invalid 2FA code provided for user: {}", username);
+            if (codeStr.length() != 6) {
+                log.warn("Invalid 2FA code length for user: {}, length: {}", username, codeStr.length());
+                return false;
+            }
+
+            int code = Integer.parseInt(codeStr);
+            boolean isValid = googleAuthenticator.authorize(user.getTwoFactorSecret(), code);
+
+            if (isValid) {
+                user.setTwoFactorEnabled(true);
+                userRepository.save(user);
+                log.info("2FA enabled successfully for user: {}", username);
+                return true;
+            } else {
+                log.warn("Invalid 2FA code provided for user: {}", username);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse 2FA code for user: {}, code: {}", username, request.getVerificationCode(), e);
             return false;
         }
     }

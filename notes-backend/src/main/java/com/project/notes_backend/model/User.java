@@ -70,6 +70,12 @@ public class User {
     private boolean isTwoFactorEnabled = false;
     private String signUpMethod;
 
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     @JsonBackReference

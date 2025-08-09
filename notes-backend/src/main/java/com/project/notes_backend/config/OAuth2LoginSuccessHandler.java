@@ -64,6 +64,21 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             User user = findOrCreateUser(email, username, name, provider, attributes);
             System.out.println("User found/created: " + user.getUserName());
 
+            // Check if user has 2FA enabled
+            if (user.isTwoFactorEnabled()) {
+                // Redirect to 2FA verification page
+                String twoFactorUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/2fa")
+                        .queryParam("user", user.getUserName())
+                        .queryParam("email", user.getEmail())
+                        .queryParam("provider", provider)
+                        .queryParam("requires2fa", "true")
+                        .build().toUriString();
+
+                System.out.println("User has 2FA enabled, redirecting to 2FA verification: " + twoFactorUrl);
+                getRedirectStrategy().sendRedirect(request, response, twoFactorUrl);
+                return;
+            }
+
             // Generate JWT token by creating UserDetailsImpl from User
             com.project.notes_backend.security.UserDetailsImpl userDetails
                     = com.project.notes_backend.security.UserDetailsImpl.build(user);

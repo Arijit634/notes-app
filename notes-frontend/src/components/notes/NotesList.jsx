@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCopyToClipboard } from '../../hooks';
+import { fetchRecentActivities } from '../../store/slices/activitiesSlice';
 import { toggleFavorite } from '../../store/slices/favoritesSlice';
 import {
   createNote,
@@ -171,6 +172,10 @@ const NotesList = ({ initialEditNote }) => {
     if (window.confirm(`Are you sure you want to delete "${note.title}"?`)) {
       try {
         await dispatch(deleteNote(note.id)).unwrap();
+        // Refresh activities to show delete action
+        setTimeout(() => {
+          dispatch(fetchRecentActivities(7)); // Fetch 7 days of activities
+        }, 300);
       } catch (error) {
         console.error('Failed to delete note:', error);
       }
@@ -204,6 +209,11 @@ const NotesList = ({ initialEditNote }) => {
       }
       setShowNoteForm(false);
       setEditingNote(null);
+      
+      // Refresh activities to show create/update action
+      setTimeout(() => {
+        dispatch(fetchRecentActivities(7)); // Fetch 7 days of activities
+      }, 300);
     } catch (error) {
       console.error('Failed to save note:', error);
       // Only refresh on error to sync with server state

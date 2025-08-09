@@ -238,8 +238,18 @@ const checkAuthStatus = createAsyncThunk(
       if (!token || tokenUtils.isTokenExpired(token)) {
         return rejectWithValue('No valid token');
       }
-      const userInfo = tokenUtils.getUserInfo();
-      return { token, user: userInfo };
+      
+      // Try to get fresh user data from API
+      try {
+        const userInfo = await authAPI.getUserInfo();
+        userUtils.setUserInfo(userInfo);
+        return { token, user: userInfo };
+      } catch (apiError) {
+        // If API call fails, fall back to cached user info
+        console.warn('Failed to refresh user info, using cached data:', apiError);
+        const userInfo = tokenUtils.getUserInfo();
+        return { token, user: userInfo };
+      }
     } catch (error) {
       return rejectWithValue('Authentication check failed');
     }
@@ -497,7 +507,7 @@ const authSlice = createSlice({
 });
 
 export {
-    checkAuthStatus, completeTwoFactorLogin, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
+  checkAuthStatus, completeTwoFactorLogin, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
 };
 
 export const { 

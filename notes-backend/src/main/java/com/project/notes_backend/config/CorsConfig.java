@@ -15,7 +15,7 @@ import jakarta.annotation.PostConstruct;
 @Configuration
 public class CorsConfig {
 
-    @Value("${frontend.url:http://notes-app-frontend-arijit634.s3-website-us-east-1.amazonaws.com}")
+    @Value("${frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
     @PostConstruct
