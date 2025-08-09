@@ -196,15 +196,18 @@ const NotesList = ({ initialEditNote }) => {
     try {
       if (editingNote) {
         await dispatch(updateNote({ id: editingNote.id, noteData })).unwrap();
+        // Only refresh for updates to ensure data consistency
+        dispatch(fetchNotes());
       } else {
         await dispatch(createNote(noteData)).unwrap();
+        // Don't refresh notes for creation - Redux already adds it to state
       }
       setShowNoteForm(false);
       setEditingNote(null);
-      // Refresh notes after successful operation
-      dispatch(fetchNotes());
     } catch (error) {
       console.error('Failed to save note:', error);
+      // Only refresh on error to sync with server state
+      dispatch(fetchNotes());
     } finally {
       setFormLoading(false);
     }

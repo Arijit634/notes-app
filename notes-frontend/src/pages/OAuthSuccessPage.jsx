@@ -1,17 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Spinner } from '../components/common';
-import { tokenUtils } from '../services/api';
+import { authAPI, tokenUtils } from '../services/api';
 import { loginUser } from '../store/slices/authSlice';
 
 const OAuthSuccessPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent multiple executions during React strict mode
+    if (processedRef.current) return;
+    processedRef.current = true;
+
     const handleOAuthSuccess = async () => {
       try {
         // Extract parameters from URL
@@ -42,26 +47,40 @@ const OAuthSuccessPage = () => {
         // Store the token
         tokenUtils.setToken(token);
 
-        // Create user object for Redux state
-        const userInfo = {
-          username: user,
-          email: email || '',
-          provider: provider || 'oauth2'
-        };
+        // Fetch complete user profile from backend (like regular login does)
+        try {
+          const completeUserInfo = await authAPI.getUserInfo();
+          tokenUtils.setUserInfo(completeUserInfo);
+          
+          // Dispatch the login success action to update Redux state
+          dispatch(loginUser.fulfilled({
+            user: completeUserInfo,
+            token: token,
+          }));
+        } catch (error) {
+          console.error('Failed to fetch complete user info after OAuth:', error);
+          // Fallback to basic user info if API call fails
+          const userInfo = {
+            userName: user,  // Changed to userName to match backend
+            email: email || '',
+            provider: provider || 'oauth2'
+          };
+          tokenUtils.setUserInfo(userInfo);
+          
+          // Dispatch the login success action to update Redux state
+          dispatch(loginUser.fulfilled({
+            user: userInfo,
+            token: token,
+          }));
+        }
 
-        // Store user info
-        tokenUtils.setUserInfo(userInfo);
-
-        // Dispatch the login success action to update Redux state
-        dispatch(loginUser.fulfilled({
-          user: userInfo,
-          token: token,
-        }));
-
-        // Show success message only if this is a fresh login (not a page refresh or duplicate)
-        const hasShownOAuthSuccess = sessionStorage.getItem('oauth_success_shown');
+        // Show success message only once per OAuth session
+        const oauthKey = `oauth_success_${token.substring(0, 10)}`;
+        const hasShownOAuthSuccess = sessionStorage.getItem(oauthKey);
         if (!hasShownOAuthSuccess) {
           toast.success(`Welcome back, ${user}! You're now logged in.`);
+          sessionStorage.setItem(oauthKey, 'true');
+          // Also set general flag to prevent duplicates across sessions
           sessionStorage.setItem('oauth_success_shown', 'true');
         }
         

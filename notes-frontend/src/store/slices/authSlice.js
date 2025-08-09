@@ -6,12 +6,13 @@ import { userUtils } from '../../utils/helpers';
 
 // Initial state
 const initialState = {
-  user: tokenUtils.getUserInfo(),
+  user: userUtils.getUserInfo(),
   token: tokenUtils.getToken(),
   isAuthenticated: !!tokenUtils.getToken() && !tokenUtils.isTokenExpired(tokenUtils.getToken()),
   loading: false,
   error: null,
   twoFactorRequired: false,
+  pendingUsername: null,
   emailVerificationRequired: false,
 };
 
@@ -21,6 +22,15 @@ const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
+      
+      // Check if 2FA is required
+      if (response.requires2FA) {
+        return {
+          requires2FA: true,
+          username: response.username,
+          message: response.message
+        };
+      }
       
       // Store tokens and user info
       tokenUtils.setToken(response.jwtToken);
@@ -50,8 +60,63 @@ const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData);
-      toast.success(SUCCESS_MESSAGES.REGISTER);
-      return response;
+      
+      // Auto-login after successful registration
+      try {
+        const loginResponse = await authAPI.login({
+          username: userData.username,
+          password: userData.password
+        });
+        
+        // Store tokens and user info
+        tokenUtils.setToken(loginResponse.jwtToken);
+        if (loginResponse.refreshToken) {
+          tokenUtils.setRefreshToken(loginResponse.refreshToken);
+        }
+        
+        // Get user info
+        const userInfo = await authAPI.getUserInfo();
+        userUtils.setUserInfo(userInfo);
+        
+        toast.success(SUCCESS_MESSAGES.REGISTER);
+        return {
+          user: userInfo,
+          token: loginResponse.jwtToken,
+        };
+      } catch (loginError) {
+        // Registration succeeded but auto-login failed
+        toast.success(SUCCESS_MESSAGES.REGISTER);
+        return response;
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || ERROR_MESSAGES.GENERIC_ERROR;
+      toast.error(errorMessage);
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+const completeTwoFactorLogin = createAsyncThunk(
+  'auth/completeTwoFactorLogin',
+  async ({ username, verificationCode }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.completeTwoFactorLogin(username, verificationCode);
+      
+      // Store tokens and user info
+      tokenUtils.setToken(response.jwtToken);
+      if (response.refreshToken) {
+        tokenUtils.setRefreshToken(response.refreshToken);
+      }
+      
+      // Get user info
+      const userInfo = await authAPI.getUserInfo();
+      userUtils.setUserInfo(userInfo);
+      
+      toast.success(SUCCESS_MESSAGES.LOGIN);
+      return {
+        user: userInfo,
+        token: response.jwtToken,
+      };
     } catch (error) {
       const errorMessage = error.response?.data?.message || ERROR_MESSAGES.GENERIC_ERROR;
       toast.error(errorMessage);
@@ -233,12 +298,20 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
         state.error = null;
-        state.twoFactorRequired = false;
-        state.emailVerificationRequired = false;
+        
+        // Check if 2FA is required
+        if (action.payload.requires2FA) {
+          state.twoFactorRequired = true;
+          state.pendingUsername = action.payload.username;
+          state.isAuthenticated = false;
+        } else {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.isAuthenticated = true;
+          state.twoFactorRequired = false;
+          state.emailVerificationRequired = false;
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -248,15 +321,44 @@ const authSlice = createSlice({
         state.token = null;
       })
       
+      // Complete Two-Factor Login
+      .addCase(completeTwoFactorLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(completeTwoFactorLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.error = null;
+        state.twoFactorRequired = false;
+        state.pendingUsername = null;
+        state.emailVerificationRequired = false;
+      })
+      .addCase(completeTwoFactorLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
       // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state) => {
+      .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.emailVerificationRequired = true;
+        // If we have user and token (auto-login success), set them
+        if (action.payload.user && action.payload.token) {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.isAuthenticated = true;
+          state.emailVerificationRequired = false;
+        } else {
+          // Registration succeeded but no auto-login
+          state.emailVerificationRequired = true;
+        }
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -395,7 +497,7 @@ const authSlice = createSlice({
 });
 
 export {
-    checkAuthStatus, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
+    checkAuthStatus, completeTwoFactorLogin, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
 };
 
 export const { 

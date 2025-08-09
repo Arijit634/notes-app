@@ -1,12 +1,15 @@
 import {
-    Bars3Icon,
-    BellIcon,
-    Cog6ToothIcon,
-    MoonIcon,
-    SunIcon,
-    XMarkIcon
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
+  BellIcon,
+  Cog6ToothIcon,
+  MoonIcon,
+  SunIcon,
+  UserCircleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile, useKeyboardShortcut } from '../../hooks';
@@ -21,6 +24,10 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+  const notificationsRef = useRef(null);
   
   const { 
     sidebarOpen, 
@@ -30,6 +37,23 @@ const Layout = ({ children }) => {
   } = useSelector(state => state.ui);
   
   const { user, isAuthenticated } = useSelector(state => state.auth);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Handlers
   const handleLogout = async () => {
@@ -141,19 +165,25 @@ const Layout = ({ children }) => {
                   label="Shared" 
                   isActive={location.pathname === '/shared'}
                 />
+                <SidebarLink 
+                  href="/profile" 
+                  icon="⚙️" 
+                  label="Profile" 
+                  isActive={location.pathname === '/profile'}
+                />
               </nav>
 
               {/* User Section */}
               <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                 <div className="flex items-center space-x-3 mb-3">
                   <Avatar
-                    name={user?.username}
+                    name={user?.userName}
                     src={user?.profilePicture}
                     size="sm"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {user?.username}
+                      {user?.userName}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {user?.email}
@@ -205,8 +235,12 @@ const Layout = ({ children }) => {
 
             <div className="flex items-center space-x-3">
               {/* Notifications */}
-              <div className="relative">
-                <Button variant="ghost" size="sm">
+              <div className="relative" ref={notificationsRef}>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                >
                   <BellIcon className="w-5 h-5" />
                   {notifications.length > 0 && (
                     <Badge
@@ -218,20 +252,104 @@ const Layout = ({ children }) => {
                     </Badge>
                   )}
                 </Button>
+                
+                {/* Notifications Dropdown */}
+                <AnimatePresence>
+                  {notificationsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                    >
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Notifications
+                        </h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                            No notifications
+                          </div>
+                        ) : (
+                          notifications.map((notification, index) => (
+                            <div key={index} className="p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700">
+                              <div className="text-sm text-gray-900 dark:text-gray-100">
+                                {notification.message}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {notification.time}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Settings */}
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/profile')}
+              >
                 <Cog6ToothIcon className="w-5 h-5" />
               </Button>
 
-              {/* Profile */}
-              <Avatar
-                name={user?.username}
-                src={user?.profilePicture}
-                size="sm"
-                className="cursor-pointer"
-              />
+              {/* Profile Dropdown */}
+              <div className="relative" ref={profileDropdownRef}>
+                <Avatar
+                  name={user?.userName}
+                  src={user?.profilePicture}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                />
+                
+                {/* Profile Dropdown Menu */}
+                <AnimatePresence>
+                  {profileDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                    >
+                      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {user?.userName}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {user?.email}
+                        </div>
+                      </div>
+                      <div className="p-1">
+                        <Link
+                          to="/profile"
+                          className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <UserCircleIcon className="w-4 h-4" />
+                          <span>Profile Settings</span>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded w-full text-left"
+                        >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </header>

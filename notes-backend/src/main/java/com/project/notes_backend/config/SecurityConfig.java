@@ -76,6 +76,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        // Profile picture serving endpoint - public access
+                        .requestMatchers("/api/profile/picture/**").permitAll()
                         // H2 Console for database access
                         .requestMatchers("/h2-console/**").permitAll()
                         // Swagger/OpenAPI documentation endpoints

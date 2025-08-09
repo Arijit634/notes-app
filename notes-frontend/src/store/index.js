@@ -4,6 +4,7 @@ import activitySlice from './slices/activitySlice';
 import authSlice from './slices/authSlice';
 import favoritesSlice from './slices/favoritesSlice';
 import notesSlice from './slices/notesSlice';
+import profileSlice from './slices/profileSlice';
 import uiSlice from './slices/uiSlice';
 import userSlice from './slices/userSlice';
 
@@ -14,6 +15,7 @@ const store = configureStore({
     auth: authSlice,
     favorites: favoritesSlice,
     notes: notesSlice,
+    profile: profileSlice,
     ui: uiSlice,
     user: userSlice,
   },

@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   // Authentication endpoints
   AUTH: {
     SIGNIN: '/auth/public/signin',
+    SIGNIN_2FA: '/auth/public/signin-2fa',
     SIGNUP: '/auth/public/signup',
     LOGOUT: '/auth/logout',
     USER_INFO: '/auth/user',
@@ -40,6 +41,18 @@ export const API_ENDPOINTS = {
     TOGGLE_FAVORITE: (id) => `/api/notes/${id}/favorite`,
   },
   
+  // Profile endpoints
+  PROFILE: {
+    BASE: '/api/profile',
+    CHANGE_PASSWORD: '/api/profile/change-password',
+    UPLOAD_PICTURE: '/api/profile/picture',
+    DELETE_PICTURE: '/api/profile/picture',
+    SETUP_2FA: '/api/profile/2fa/setup',
+    VERIFY_2FA: '/api/profile/2fa/verify',
+    DISABLE_2FA: '/api/profile/2fa/disable',
+    PICTURE: (filename) => `/api/profile/picture/${filename}`,
+  },
+
   // Admin endpoints (Based on actual backend implementation)
   ADMIN: {
     USERS: '/admin/users',

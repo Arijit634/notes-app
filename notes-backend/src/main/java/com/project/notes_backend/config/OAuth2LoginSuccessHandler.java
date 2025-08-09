@@ -37,7 +37,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Autowired
     private JwtUtils jwtUtils;
 
-    @Value("${frontend.url:http://notes-app-frontend-arijit634.s3-website-us-east-1.amazonaws.com}")
+    @Value("${frontend.url}")
     private String frontendUrl;
 
     @Value("${oauth2.redirect.base-url:http://localhost:5000}")
@@ -46,9 +46,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
-
-        System.out.println("🔐 OAuth2 Success Handler - Frontend URL: " + frontendUrl);
-        System.out.println("🔐 OAuth2 Success Handler - OAuth2 Base URL: " + oauth2BaseUrl);
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -64,7 +61,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         try {
             // Find or create user
-            User user = findOrCreateUser(email, username, name, provider);
+            User user = findOrCreateUser(email, username, name, provider, attributes);
             System.out.println("User found/created: " + user.getUserName());
 
             // Generate JWT token by creating UserDetailsImpl from User
@@ -168,24 +165,30 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         return username;
     }
 
-    private User findOrCreateUser(String email, String username, String name, String provider) {
+    private User findOrCreateUser(String email, String username, String name, String provider, Map<String, Object> attributes) {
         // First try to find by email
         Optional<User> existingUser = userRepository.findByEmail(email);
         if (existingUser.isPresent()) {
-            return existingUser.get();
+            User user = existingUser.get();
+            // Update profile picture if not set and available from OAuth
+            updateProfilePictureIfNeeded(user, provider, attributes);
+            return user;
         }
 
         // If not found, create new user
-        return createNewUser(email, username, name, provider);
+        return createNewUser(email, username, name, provider, attributes);
     }
 
-    private User createNewUser(String email, String username, String name, String provider) {
+    private User createNewUser(String email, String username, String name, String provider, Map<String, Object> attributes) {
         // Get default user role
         Role userRole = roleRepository.findByRoleName(AppRole.USER)
                 .orElseThrow(() -> new RuntimeException("Default USER role not found"));
 
         // Ensure unique username
         username = findAvailableUsername(username);
+
+        // Extract profile picture URL from OAuth provider
+        String profilePictureUrl = extractProfilePicture(provider, attributes);
 
         // Create new user
         User newUser = new User();
@@ -199,6 +202,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         newUser.setCredentialsNonExpired(true);
         newUser.setTwoFactorEnabled(false);
         newUser.setSignUpMethod(provider);
+        newUser.setProfilePicture(profilePictureUrl);
         newUser.setCreatedDate(LocalDateTime.now());
         newUser.setUpdatedDate(LocalDateTime.now());
         newUser.setAccountExpiryDate(LocalDate.now().plusYears(10));
@@ -226,5 +230,26 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Last resort - use timestamp
         return baseUsername.substring(0, Math.min(baseUsername.length(), 10))
                 + System.currentTimeMillis() % 10000;
+    }
+
+    private void updateProfilePictureIfNeeded(User user, String provider, Map<String, Object> attributes) {
+        if (user.getProfilePicture() == null) {
+            String profilePictureUrl = extractProfilePicture(provider, attributes);
+            if (profilePictureUrl != null) {
+                user.setProfilePicture(profilePictureUrl);
+                userRepository.save(user);
+            }
+        }
+    }
+
+    private String extractProfilePicture(String provider, Map<String, Object> attributes) {
+        switch (provider) {
+            case "google":
+                return (String) attributes.get("picture");
+            case "github":
+                return (String) attributes.get("avatar_url");
+            default:
+                return null;
+        }
     }
 }
