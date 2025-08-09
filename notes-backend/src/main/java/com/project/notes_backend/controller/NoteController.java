@@ -48,7 +48,8 @@ public class NoteController {
     }
 
     /**
-     * Get paginated list of user's notes with optional search and category filter
+     * Get paginated list of user's notes with optional search and category
+     * filter
      */
     @GetMapping
     public ResponseEntity<Page<NoteResponseDTO>> getUserNotes(

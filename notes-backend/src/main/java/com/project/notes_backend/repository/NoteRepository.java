@@ -17,14 +17,14 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // Basic queries with pagination
     Page<Note> findByOwnerUsernameOrderByCreatedAtDesc(String ownerUsername, Pageable pageable);
-    
+
     Page<Note> findByOwnerUsername(String ownerUsername, Pageable pageable);
 
     List<Note> findByOwnerUsername(String ownerUsername);
 
     // Category filtering
     Page<Note> findByOwnerUsernameAndCategory(String ownerUsername, String category, Pageable pageable);
-    
+
     // Shared notes
     Page<Note> findByOwnerUsernameAndIsSharedTrue(String ownerUsername, Pageable pageable);
 

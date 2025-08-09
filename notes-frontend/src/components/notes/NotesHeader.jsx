@@ -1,15 +1,15 @@
 import { Menu, Transition } from '@headlessui/react';
 import {
-    CalendarIcon,
-    EyeIcon,
-    EyeSlashIcon,
-    FunnelIcon,
-    ListBulletIcon,
-    MagnifyingGlassIcon,
-    PlusIcon,
-    Squares2X2Icon,
-    StarIcon,
-    TagIcon
+  CalendarIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  FunnelIcon,
+  ListBulletIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  StarIcon,
+  TagIcon
 } from '@heroicons/react/24/outline';
 import { Fragment } from 'react';
 import { Badge } from '../common';
