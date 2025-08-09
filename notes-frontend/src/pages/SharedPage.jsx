@@ -56,8 +56,8 @@ const SharedPage = () => {
 
   const handleCopyNote = async (note) => {
     try {
-      const textToCopy = `${note.title}\n\n${note.content}`;
-      await copyToClipboard(textToCopy);
+      // Copy only the content, consistent with NotesList behavior
+      await copyToClipboard(note.content);
     } catch (error) {
       console.error('Failed to copy note:', error);
     }

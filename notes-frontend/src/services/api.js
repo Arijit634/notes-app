@@ -233,6 +233,14 @@ export const authAPI = {
     const response = await apiClient.get(API_ENDPOINTS.AUTH.GET_2FA_STATUS);
     return response.data;
   },
+
+  // OAuth 2FA verification
+  verifyOAuth2FA: async (code, username) => {
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.OAUTH2_VERIFY_2FA, null, {
+      params: { code, username }
+    });
+    return response.data;
+  },
 };
 
 // Notes API

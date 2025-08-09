@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
     VERIFY_2FA: '/auth/verify-2fa',
     GET_2FA_STATUS: '/auth/user/2fa-status',
     VERIFY_2FA_LOGIN: '/auth/public/verify-2fa-login',
+    OAUTH2_VERIFY_2FA: '/auth/public/oauth2/verify-2fa',
     OAUTH2_SUCCESS: '/auth/oauth2/success',
     OAUTH2_GOOGLE: '/oauth2/authorization/google',
     OAUTH2_GITHUB: '/oauth2/authorization/github',

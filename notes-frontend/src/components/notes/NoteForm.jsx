@@ -1,35 +1,36 @@
 import {
-    DocumentTextIcon,
-    EyeIcon,
-    EyeSlashIcon,
-    XMarkIcon
+  DocumentTextIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  PlusIcon,
+  TagIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
-import { Badge } from '../common';
+import Badge from '../common/Badge';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import Input from '../common/Input';
 import Modal from '../common/Modal';
 
-// Validation schema - Updated to match backend NoteRequestDTO
+// Validation schema
 const noteSchema = yup.object({
   title: yup
     .string()
-    .max(100, 'Title must be less than 100 characters'),
+    .required('Title is required')
+    .min(1, 'Title cannot be empty')
+    .max(200, 'Title must be less than 200 characters'),
   content: yup
     .string()
     .required('Content is required')
-    .min(1, 'Content cannot be empty')
-    .max(10000, 'Content cannot exceed 10000 characters'),
-  description: yup
-    .string()
-    .max(500, 'Description cannot exceed 500 characters'),
-  category: yup
-    .string()
-    .max(50, 'Category cannot exceed 50 characters'),
+    .min(1, 'Content cannot be empty'),
+  tags: yup
+    .array()
+    .of(yup.string())
+    .max(10, 'Maximum 10 tags allowed'),
 });
 
 const NoteForm = ({ 
@@ -39,6 +40,7 @@ const NoteForm = ({
   onSave, 
   loading 
 }) => {
+  const [newTag, setNewTag] = useState('');
   const [isPreview, setIsPreview] = useState(false);
   const contentRef = useRef(null);
 
@@ -56,8 +58,9 @@ const NoteForm = ({
     defaultValues: {
       title: note?.title || '',
       content: note?.content || '',
-      description: note?.description || '',
-      category: note?.category || '',
+      tags: note?.tags || [],
+      favorite: note?.favorite || false,
+      isPublic: note?.isPublic || false,
     },
   });
 
@@ -68,18 +71,33 @@ const NoteForm = ({
       reset({
         title: note.title || '',
         content: note.content || '',
-        description: note.description || '',
-        category: note.category || '',
+        tags: note.tags || [],
+        favorite: note.favorite || false,
+        isPublic: note.isPublic || false,
       });
     } else {
       reset({
         title: '',
         content: '',
-        description: '',
-        category: '',
+        tags: [],
+        favorite: false,
+        isPublic: false,
       });
     }
   }, [note, reset]);
+
+  const addTag = () => {
+    if (newTag.trim() && !watchedValues.tags.includes(newTag.trim())) {
+      const updatedTags = [...watchedValues.tags, newTag.trim()];
+      setValue('tags', updatedTags);
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    const updatedTags = watchedValues.tags.filter(tag => tag !== tagToRemove);
+    setValue('tags', updatedTags);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && e.target === contentRef.current) {
@@ -107,18 +125,17 @@ const NoteForm = ({
 
   const renderPreview = () => (
     <div className="prose dark:prose-invert max-w-none">
-      <h2 className="text-2xl font-bold mb-4">{watchedValues.title || 'Untitled'}</h2>
-      {watchedValues.description && (
-        <p className="text-gray-600 dark:text-gray-400 mb-4 italic">{watchedValues.description}</p>
-      )}
+      <h2 className="text-2xl font-bold mb-4">{watchedValues.title}</h2>
       <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
         {watchedValues.content}
       </div>
-      {watchedValues.category && (
-        <div className="mt-4">
-          <Badge variant="outline">
-            {watchedValues.category}
-          </Badge>
+      {watchedValues.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {watchedValues.tags.map((tag) => (
+            <Badge key={tag} variant="outline">
+              {tag}
+            </Badge>
+          ))}
         </div>
       )}
     </div>
@@ -196,21 +213,98 @@ const NoteForm = ({
               )}
             </div>
 
-            {/* Description Field */}
-            <Input
-              label="Description (Optional)"
-              placeholder="Brief description of the note..."
-              error={errors.description?.message}
-              {...register('description')}
-            />
+            {/* Tags Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tags
+              </label>
+              
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="flex-1">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Add a tag..."
+                    leftIcon={<TagIcon className="w-4 h-4" />}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={addTag}
+                  disabled={!newTag.trim()}
+                  size="sm"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </Button>
+              </div>
 
-            {/* Category Field */}
-            <Input
-              label="Category (Optional)"
-              placeholder="e.g., Personal, Work, Study..."
-              error={errors.category?.message}
-              {...register('category')}
-            />
+              {watchedValues.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {watchedValues.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => removeTag(tag)}
+                    >
+                      {tag}
+                      <XMarkIcon className="w-3 h-3 ml-1" />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              {errors.tags && (
+                <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                  {errors.tags.message}
+                </p>
+              )}
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center space-x-6">
+              <Controller
+                name="favorite"
+                control={control}
+                render={({ field }) => (
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      Mark as favorite
+                    </span>
+                  </label>
+                )}
+              />
+
+              <Controller
+                name="isPublic"
+                control={control}
+                render={({ field }) => (
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      Make public
+                    </span>
+                  </label>
+                )}
+              />
+            </div>
 
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <Button
