@@ -202,13 +202,9 @@ export const fetchPublicNotes = createAsyncThunk(
   'notes/fetchPublicNotes',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('🔍 Fetching public notes from API...');
       const response = await notesAPI.getPublicNotes();
-      console.log('✅ Public notes API response:', response);
-      console.log('📊 Total public notes found:', response?.content?.length || response?.length || 0);
       return response;
     } catch (error) {
-      console.error('❌ Failed to fetch public notes:', error);
       const errorMessage = error.response?.data?.message || ERROR_MESSAGES.GENERIC_ERROR;
       return rejectWithValue(errorMessage);
     }
@@ -471,15 +467,12 @@ const notesSlice = createSlice({
         if (data && data.content) {
           // Paginated response
           state.publicNotes = data.content;
-          console.log('📊 Redux: Storing public notes from paginated response:', data.content.length);
         } else if (Array.isArray(data)) {
           // Direct array response
           state.publicNotes = data;
-          console.log('📊 Redux: Storing public notes from array response:', data.length);
         } else {
           // Fallback
           state.publicNotes = [];
-          console.log('⚠️ Redux: Unexpected public notes response format:', data);
         }
       })
       .addCase(fetchPublicNotes.rejected, (state, action) => {
