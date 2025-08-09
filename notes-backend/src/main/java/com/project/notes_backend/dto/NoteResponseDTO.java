@@ -29,4 +29,6 @@ public class NoteResponseDTO {
     private int shareCount;
     @JsonProperty("favorite")
     private boolean isFavorite;
+    @JsonProperty("public")
+    private boolean isPublic;
 }

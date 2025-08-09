@@ -27,4 +27,6 @@ public interface NoteService {
     NoteResponseDTO toggleFavorite(Long noteId, String username);
 
     Page<NoteResponseDTO> getFavoriteNotes(String username, Pageable pageable);
+
+    Page<NoteResponseDTO> getPublicNotes(Pageable pageable);
 }

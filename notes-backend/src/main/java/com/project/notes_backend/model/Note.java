@@ -71,6 +71,9 @@ public class Note {
     @Column(name = "is_shared", nullable = false)
     private boolean isShared = false;
 
+    @Column(name = "is_public")
+    private Boolean isPublic = false;
+
     @Column(name = "share_count", nullable = false)
     private int shareCount = 0;
 

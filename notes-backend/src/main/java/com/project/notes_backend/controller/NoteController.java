@@ -149,4 +149,15 @@ public class NoteController {
         NoteResponseDTO note = noteService.toggleFavorite(noteId, userDetails.getUsername());
         return ResponseEntity.ok(note);
     }
+
+    /**
+     * Get all public notes (accessible to all authenticated users)
+     */
+    @GetMapping("/public")
+    public ResponseEntity<Page<NoteResponseDTO>> getPublicNotes(
+            @PageableDefault(size = 20, sort = "updatedAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+
+        Page<NoteResponseDTO> publicNotes = noteService.getPublicNotes(pageable);
+        return ResponseEntity.ok(publicNotes);
+    }
 }

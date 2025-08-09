@@ -67,7 +67,7 @@ const NoteForm = ({
       category: note?.category || '',
       description: note?.description || '',
       tags: note?.tags || [],
-      favorite: note?.favorite || false,
+      isFavorite: note?.isFavorite || false,
       isPublic: note?.isPublic || false,
     },
   });
@@ -82,7 +82,7 @@ const NoteForm = ({
         category: note.category || '',
         description: note.description || '',
         tags: note.tags || [],
-        favorite: note.favorite || false,
+        isFavorite: note.isFavorite || false,
         isPublic: note.isPublic || false,
       });
     } else {
@@ -92,7 +92,7 @@ const NoteForm = ({
         category: '',
         description: '',
         tags: [],
-        favorite: false,
+        isFavorite: false,
         isPublic: false,
       });
     }
@@ -332,20 +332,28 @@ const NoteForm = ({
             {/* Options */}
             <div className="flex items-center space-x-6">
               <Controller
-                name="favorite"
+                name="isFavorite"
                 control={control}
                 render={({ field }) => (
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={field.onChange}
-                      className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      Mark as favorite
-                    </span>
-                  </label>
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={(e) => {
+                          console.log('Favorite checkbox changed:', e.target.checked); // Debug
+                          field.onChange(e.target.checked);
+                        }}
+                        className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Mark as favorite
+                      </span>
+                    </label>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
+                      Favorite notes appear in your favorites list for quick access
+                    </p>
+                  </div>
                 )}
               />
 
@@ -353,17 +361,22 @@ const NoteForm = ({
                 name="isPublic"
                 control={control}
                 render={({ field }) => (
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={field.onChange}
-                      className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      Make public
-                    </span>
-                  </label>
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Share publicly
+                      </span>
+                    </label>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
+                      Public notes appear in the "Public Notes" tab for everyone to see
+                    </p>
+                  </div>
                 )}
               />
             </div>
