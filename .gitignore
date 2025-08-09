@@ -28,3 +28,12 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+#shell scripts
+*.ps1
+
+
+*.md
+!README.md
+
+*.jar

@@ -18,10 +18,12 @@ import com.project.notes_backend.dto.NoteResponseDTO;
 import com.project.notes_backend.exception.UnauthorizedAccessException;
 import com.project.notes_backend.model.Note;
 import com.project.notes_backend.model.User;
+import com.project.notes_backend.model.UserActivity;
 import com.project.notes_backend.repository.NoteRepository;
 import com.project.notes_backend.repository.UserRepository;
 import com.project.notes_backend.service.AuditLogService;
 import com.project.notes_backend.service.NoteService;
+import com.project.notes_backend.service.UserActivityService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +40,9 @@ public class NoteServiceImpl implements NoteService {
 
     @Autowired
     private AuditLogService auditLogService;
+
+    @Autowired
+    private UserActivityService userActivityService;
 
     @Override
     @CacheEvict(value = "userNotes", allEntries = true)
@@ -56,6 +61,10 @@ public class NoteServiceImpl implements NoteService {
 
         Note savedNote = noteRepository.save(note);
         auditLogService.logNoteCreation(username, savedNote);
+
+        // Log user activity
+        userActivityService.logActivity(username, UserActivity.ActivityType.CREATED, "note",
+                savedNote.getId(), savedNote.getTitle() != null ? savedNote.getTitle() : "Untitled Note");
 
         log.info("Note created successfully with ID: {} for user: {}", savedNote.getId(), username);
         return convertToResponseDTO(savedNote);
@@ -107,6 +116,10 @@ public class NoteServiceImpl implements NoteService {
 
         Note updatedNote = noteRepository.save(note);
         auditLogService.logNoteUpdate(username, updatedNote);
+
+        // Log user activity
+        userActivityService.logActivity(username, UserActivity.ActivityType.UPDATED, "note",
+                updatedNote.getId(), updatedNote.getTitle() != null ? updatedNote.getTitle() : "Untitled Note");
 
         log.info("Note updated successfully: ID {} for user: {}", noteId, username);
         return convertToResponseDTO(updatedNote);
@@ -183,6 +196,7 @@ public class NoteServiceImpl implements NoteService {
         dto.setUpdatedAt(note.getUpdatedAt());
         dto.setShared(note.isShared());
         dto.setShareCount(note.getShareCount());
+        dto.setFavorite(note.isFavorite());
         return dto;
     }
 
@@ -201,5 +215,42 @@ public class NoteServiceImpl implements NoteService {
         if (!note.getOwnerUsername().equals(username)) {
             throw new UnauthorizedAccessException("Access denied: You can only access your own notes");
         }
+    }
+
+    @Override
+    @CacheEvict(value = "userNotes", allEntries = true)
+    public NoteResponseDTO toggleFavorite(Long noteId, String username) {
+        log.info("Toggling favorite status for note: {} by user: {}", noteId, username);
+
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new RuntimeException("Note not found with id: " + noteId));
+
+        validateNoteOwnership(note, username);
+
+        // Toggle the favorite status
+        note.setFavorite(!note.isFavorite());
+        note.setUpdatedAt(LocalDateTime.now());
+
+        Note savedNote = noteRepository.save(note);
+
+        // Log the action - using the existing pattern from other methods
+        auditLogService.logNoteUpdate(username, savedNote);
+
+        // Log user activity
+        UserActivity.ActivityType activityType = savedNote.isFavorite()
+                ? UserActivity.ActivityType.FAVORITED : UserActivity.ActivityType.UNFAVORITED;
+        userActivityService.logActivity(username, activityType, "note",
+                savedNote.getId(), savedNote.getTitle() != null ? savedNote.getTitle() : "Untitled Note");
+
+        return convertToResponseDTO(savedNote);
+    }
+
+    @Override
+    public Page<NoteResponseDTO> getFavoriteNotes(String username, Pageable pageable) {
+        log.info("Fetching favorite notes for user: {}", username);
+
+        Page<Note> favoriteNotes = noteRepository.findByOwnerUsernameAndIsFavoriteTrue(username, pageable);
+
+        return favoriteNotes.map(this::convertToResponseDTO);
     }
 }

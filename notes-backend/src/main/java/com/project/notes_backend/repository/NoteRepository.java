@@ -79,4 +79,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // Check if user has any notes
     boolean existsByOwnerUsername(String ownerUsername);
+
+    // Favorites queries
+    Page<Note> findByOwnerUsernameAndIsFavoriteTrue(String ownerUsername, Pageable pageable);
 }

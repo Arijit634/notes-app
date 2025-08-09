@@ -120,4 +120,28 @@ public class NoteController {
         Page<NoteResponseDTO> notes = noteService.searchUserNotes(userDetails.getUsername(), query, pageable);
         return ResponseEntity.ok(notes);
     }
+
+    /**
+     * Get favorite notes for the authenticated user
+     */
+    @GetMapping("/favorites")
+    public ResponseEntity<Page<NoteResponseDTO>> getFavoriteNotes(
+            @PageableDefault(size = 10, sort = "updatedAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Page<NoteResponseDTO> favoriteNotes = noteService.getFavoriteNotes(userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(favoriteNotes);
+    }
+
+    /**
+     * Toggle favorite status of a note
+     */
+    @PostMapping("/{noteId}/favorite")
+    public ResponseEntity<NoteResponseDTO> toggleFavorite(
+            @PathVariable Long noteId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        NoteResponseDTO note = noteService.toggleFavorite(noteId, userDetails.getUsername());
+        return ResponseEntity.ok(note);
+    }
 }
