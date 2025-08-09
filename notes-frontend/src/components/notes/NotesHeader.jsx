@@ -8,7 +8,8 @@ import {
     MagnifyingGlassIcon,
     PlusIcon,
     Squares2X2Icon,
-    StarIcon
+    StarIcon,
+    TagIcon
 } from '@heroicons/react/24/outline';
 import { Fragment } from 'react';
 import { Badge } from '../common';
@@ -64,6 +65,31 @@ const FilterMenu = ({ filters, onFilterChange }) => (
       <Menu.Items className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none z-10">
         <div className="p-3">
           <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Category
+              </label>
+              <select
+                value={filters.category || ''}
+                onChange={(e) => onFilterChange('category', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+              >
+                <option value="">All categories</option>
+                <option value="Personal">Personal</option>
+                <option value="Work">Work</option>
+                <option value="Study">Study</option>
+                <option value="Project">Project</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Idea">Idea</option>
+                <option value="Todo">Todo</option>
+                <option value="Reference">Reference</option>
+                <option value="Journal">Journal</option>
+                <option value="Recipe">Recipe</option>
+                <option value="Travel">Travel</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
@@ -266,6 +292,19 @@ const NotesHeader = ({
             Active filters:
           </span>
           <div className="flex items-center space-x-2">
+            {filters.category && (
+              <Badge 
+                variant="outline" 
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => onFilterChange('category', '')}
+              >
+                <TagIcon className="w-3 h-3 mr-1" />
+                {filters.category}
+                <button className="ml-1 hover:text-gray-600 dark:hover:text-gray-300">
+                  ×
+                </button>
+              </Badge>
+            )}
             {filters.favorites && (
               <Badge 
                 variant="outline" 

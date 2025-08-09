@@ -28,6 +28,7 @@ const NotesList = ({ initialEditNote }) => {
   const [view, setView] = useState('grid'); // 'grid' or 'list'
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
+    category: '',
     favorites: false,
     public: false,
     private: false,
@@ -68,6 +69,9 @@ const NotesList = ({ initialEditNote }) => {
     }
 
     // Apply filters
+    if (filters.category) {
+      filtered = filtered.filter(note => note.category === filters.category);
+    }
     if (filters.favorites) {
       filtered = filtered.filter(note => favoriteIds.includes(note.id));
     }
@@ -134,6 +138,7 @@ const NotesList = ({ initialEditNote }) => {
   const handleFilterChange = (key, value) => {
     if (key === 'reset') {
       setFilters({
+        category: '',
         favorites: false,
         public: false,
         private: false,

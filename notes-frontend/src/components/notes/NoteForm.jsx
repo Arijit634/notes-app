@@ -27,6 +27,12 @@ const noteSchema = yup.object({
     .string()
     .required('Content is required')
     .min(1, 'Content cannot be empty'),
+  category: yup
+    .string()
+    .max(50, 'Category must be less than 50 characters'),
+  description: yup
+    .string()
+    .max(500, 'Description must be less than 500 characters'),
   tags: yup
     .array()
     .of(yup.string())
@@ -58,6 +64,8 @@ const NoteForm = ({
     defaultValues: {
       title: note?.title || '',
       content: note?.content || '',
+      category: note?.category || '',
+      description: note?.description || '',
       tags: note?.tags || [],
       favorite: note?.favorite || false,
       isPublic: note?.isPublic || false,
@@ -71,6 +79,8 @@ const NoteForm = ({
       reset({
         title: note.title || '',
         content: note.content || '',
+        category: note.category || '',
+        description: note.description || '',
         tags: note.tags || [],
         favorite: note.favorite || false,
         isPublic: note.isPublic || false,
@@ -79,6 +89,8 @@ const NoteForm = ({
       reset({
         title: '',
         content: '',
+        category: '',
+        description: '',
         tags: [],
         favorite: false,
         isPublic: false,
@@ -126,6 +138,18 @@ const NoteForm = ({
   const renderPreview = () => (
     <div className="prose dark:prose-invert max-w-none">
       <h2 className="text-2xl font-bold mb-4">{watchedValues.title}</h2>
+      {watchedValues.category && (
+        <div className="mb-3">
+          <Badge variant="outline" className="text-xs">
+            {watchedValues.category}
+          </Badge>
+        </div>
+      )}
+      {watchedValues.description && (
+        <p className="text-gray-600 dark:text-gray-400 mb-4 italic">
+          {watchedValues.description}
+        </p>
+      )}
       <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
         {watchedValues.content}
       </div>
@@ -193,6 +217,44 @@ const NoteForm = ({
               error={errors.title?.message}
               {...register('title')}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Category
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100"
+                  {...register('category')}
+                >
+                  <option value="">Select a category</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Work">Work</option>
+                  <option value="Study">Study</option>
+                  <option value="Project">Project</option>
+                  <option value="Meeting">Meeting</option>
+                  <option value="Idea">Idea</option>
+                  <option value="Todo">Todo</option>
+                  <option value="Reference">Reference</option>
+                  <option value="Journal">Journal</option>
+                  <option value="Recipe">Recipe</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors.category && (
+                  <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                    {errors.category.message}
+                  </p>
+                )}
+              </div>
+
+              <Input
+                label="Description"
+                placeholder="Brief description (optional)..."
+                error={errors.description?.message}
+                {...register('description')}
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,16 +72,39 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    @Cacheable(value = "userNotes", key = "#username + '_' + #search + '_' + #pageable.pageNumber")
+    @Cacheable(value = "userNotes", key = "#username + '_' + #search + '_' + #category + '_' + #shared + '_' + #sortBy + '_' + #sortOrder + '_' + #pageable.pageNumber")
     @Transactional(readOnly = true)
-    public Page<NoteResponseDTO> getNotesForUser(String username, String search, Pageable pageable) {
-        log.debug("Fetching notes for user: {} with search: {}", username, search);
+    public Page<NoteResponseDTO> getNotesForUser(String username, String search, String category, boolean shared, String sortBy, String sortOrder, Pageable pageable) {
+        log.debug("Fetching notes for user: {} with search: {} category: {} shared: {} sortBy: {} sortOrder: {}", 
+                username, search, category, shared, sortBy, sortOrder);
+
+        // Create custom sort based on sortBy and sortOrder
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
+            "desc".equalsIgnoreCase(sortOrder) 
+                ? org.springframework.data.domain.Sort.Direction.DESC 
+                : org.springframework.data.domain.Sort.Direction.ASC,
+            sortBy
+        );
+        
+        // Create new pageable with custom sort
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         Page<Note> notes;
-        if (StringUtils.hasText(search)) {
-            notes = noteRepository.findByOwnerUsernameAndSearch(username, search, pageable);
+        if (StringUtils.hasText(search) && StringUtils.hasText(category)) {
+            // Both search and category filter
+            notes = noteRepository.findByOwnerUsernameAndCategoryAndSearch(username, category, search, sortedPageable);
+        } else if (StringUtils.hasText(search)) {
+            // Only search filter
+            notes = noteRepository.findByOwnerUsernameAndSearch(username, search, sortedPageable);
+        } else if (StringUtils.hasText(category)) {
+            // Only category filter
+            notes = noteRepository.findByOwnerUsernameAndCategory(username, category, sortedPageable);
+        } else if (shared) {
+            // Only shared filter
+            notes = noteRepository.findByOwnerUsernameAndIsSharedTrue(username, sortedPageable);
         } else {
-            notes = noteRepository.findByOwnerUsernameOrderByCreatedAtDesc(username, pageable);
+            // No filters
+            notes = noteRepository.findByOwnerUsername(username, sortedPageable);
         }
 
         return notes.map(this::convertToResponseDTO);

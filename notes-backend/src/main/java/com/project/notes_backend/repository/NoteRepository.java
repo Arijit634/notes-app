@@ -17,8 +17,16 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // Basic queries with pagination
     Page<Note> findByOwnerUsernameOrderByCreatedAtDesc(String ownerUsername, Pageable pageable);
+    
+    Page<Note> findByOwnerUsername(String ownerUsername, Pageable pageable);
 
     List<Note> findByOwnerUsername(String ownerUsername);
+
+    // Category filtering
+    Page<Note> findByOwnerUsernameAndCategory(String ownerUsername, String category, Pageable pageable);
+    
+    // Shared notes
+    Page<Note> findByOwnerUsernameAndIsSharedTrue(String ownerUsername, Pageable pageable);
 
     // Search queries
     @Query("SELECT n FROM Note n WHERE n.ownerUsername = :username AND "
@@ -26,6 +34,17 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             + "LOWER(n.title) LIKE LOWER(CONCAT('%', :search, '%')) OR "
             + "LOWER(n.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Note> findByOwnerUsernameAndSearch(@Param("username") String username,
+            @Param("search") String search,
+            Pageable pageable);
+
+    // Category + Search combination
+    @Query("SELECT n FROM Note n WHERE n.ownerUsername = :username AND "
+            + "(:category IS NULL OR n.category = :category) AND "
+            + "(LOWER(n.content) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "LOWER(n.title) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "LOWER(n.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Note> findByOwnerUsernameAndCategoryAndSearch(@Param("username") String username,
+            @Param("category") String category,
             @Param("search") String search,
             Pageable pageable);
 

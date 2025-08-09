@@ -48,15 +48,19 @@ public class NoteController {
     }
 
     /**
-     * Get paginated list of user's notes with optional search
+     * Get paginated list of user's notes with optional search and category filter
      */
     @GetMapping
     public ResponseEntity<Page<NoteResponseDTO>> getUserNotes(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false, defaultValue = "false") boolean shared,
+            @RequestParam(required = false, defaultValue = "updatedAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortOrder,
             @PageableDefault(size = 20) Pageable pageable,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        Page<NoteResponseDTO> notes = noteService.getNotesForUser(userDetails.getUsername(), search, pageable);
+        Page<NoteResponseDTO> notes = noteService.getNotesForUser(userDetails.getUsername(), search, category, shared, sortBy, sortOrder, pageable);
         return ResponseEntity.ok(notes);
     }
 
