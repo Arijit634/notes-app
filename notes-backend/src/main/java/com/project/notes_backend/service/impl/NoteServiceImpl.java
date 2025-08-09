@@ -75,17 +75,17 @@ public class NoteServiceImpl implements NoteService {
     @Cacheable(value = "userNotes", key = "#username + '_' + #search + '_' + #category + '_' + #shared + '_' + #sortBy + '_' + #sortOrder + '_' + #pageable.pageNumber")
     @Transactional(readOnly = true)
     public Page<NoteResponseDTO> getNotesForUser(String username, String search, String category, boolean shared, String sortBy, String sortOrder, Pageable pageable) {
-        log.debug("Fetching notes for user: {} with search: {} category: {} shared: {} sortBy: {} sortOrder: {}", 
+        log.debug("Fetching notes for user: {} with search: {} category: {} shared: {} sortBy: {} sortOrder: {}",
                 username, search, category, shared, sortBy, sortOrder);
 
         // Create custom sort based on sortBy and sortOrder
         org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
-            "desc".equalsIgnoreCase(sortOrder) 
-                ? org.springframework.data.domain.Sort.Direction.DESC 
+                "desc".equalsIgnoreCase(sortOrder)
+                ? org.springframework.data.domain.Sort.Direction.DESC
                 : org.springframework.data.domain.Sort.Direction.ASC,
-            sortBy
+                sortBy
         );
-        
+
         // Create new pageable with custom sort
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
