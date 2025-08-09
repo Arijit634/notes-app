@@ -78,10 +78,10 @@ const NotesList = ({ initialEditNote }) => {
       filtered = filtered.filter(note => favoriteIds.includes(note.id));
     }
     if (filters.public) {
-      filtered = filtered.filter(note => note.isPublic);
+      filtered = filtered.filter(note => note.public);
     }
     if (filters.private) {
-      filtered = filtered.filter(note => !note.isPublic);
+      filtered = filtered.filter(note => !note.public);
     }
     if (filters.dateRange) {
       const now = new Date();

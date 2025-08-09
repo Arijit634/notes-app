@@ -1,7 +1,15 @@
 import {
   CalendarIcon,
-  ClipboardIcon,
-  ClockIcon,
+  Clipboar          <div className="flex items-center space-x-1">
+            {note.public ? (
+              <EyeIcon className="w-4 h-4 text-success-500" />
+            ) : (
+              <EyeSlashIcon className="w-4 h-4 text-gray-400" />
+            )}
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {note.public ? 'Public' : 'Private'}
+            </span>
+          </div>ClockIcon,
   EyeIcon,
   EyeSlashIcon,
   HeartIcon,
@@ -184,13 +192,13 @@ const NoteListItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
 
               {/* Visibility */}
               <div className="flex items-center space-x-1">
-                {note.shared ? (
+                {note.public ? (
                   <EyeIcon className="w-4 h-4 text-success-500" />
                 ) : (
                   <EyeSlashIcon className="w-4 h-4 text-gray-400" />
                 )}
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {note.isPublic ? 'Public' : 'Private'}
+                  {note.public ? 'Public' : 'Private'}
                 </span>
               </div>
             </div>
@@ -272,3 +280,4 @@ const NoteListItem = ({ note, onView, onEdit, onDelete, onCopy, onToggleFavorite
 );
 
 export { NoteGridItem, NoteListItem };
+

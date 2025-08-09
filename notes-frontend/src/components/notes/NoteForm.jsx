@@ -67,8 +67,8 @@ const NoteForm = ({
       category: note?.category || '',
       description: note?.description || '',
       tags: note?.tags || [],
-      isFavorite: note?.isFavorite || false,
-      isPublic: note?.isPublic || false,
+      isFavorite: note?.favorite || false, // Backend sends 'favorite' not 'isFavorite'
+      isPublic: note?.public || false,     // Backend sends 'public' not 'isPublic'
     },
   });
 
@@ -82,8 +82,8 @@ const NoteForm = ({
         category: note.category || '',
         description: note.description || '',
         tags: note.tags || [],
-        isFavorite: note.isFavorite || false,
-        isPublic: note.isPublic || false,
+        isFavorite: note.favorite || false, // Backend sends 'favorite' not 'isFavorite'
+        isPublic: note.public || false,     // Backend sends 'public' not 'isPublic'
       });
     } else {
       reset({
