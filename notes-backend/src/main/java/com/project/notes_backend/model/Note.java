@@ -24,7 +24,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -74,6 +73,9 @@ public class Note {
 
     @Column(name = "share_count", nullable = false)
     private int shareCount = 0;
+
+    @Column(name = "is_favorite", nullable = false)
+    private boolean isFavorite = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

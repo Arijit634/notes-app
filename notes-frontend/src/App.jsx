@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Spinner } from './components/common';
 import Layout from './components/layout/Layout';
-import { AuthPage, CategoriesPage, DashboardPage, FavoritesPage, NotesPage, OAuthSuccessPage, ProfilePage, SharedPage } from './pages';
+import { AuthPage, CategoriesPage, DashboardPage, FavoritesPage, NotesPage, OAuthSuccessPage, SharedPage } from './pages';
 import { checkAuthStatus } from './store/slices/authSlice';
 
 // Protected Route component
@@ -139,17 +139,6 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <SharedPage />
-                  </Layout>
-                </ProtectedRoute>
-              } 
-            />
-
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProfilePage />
                   </Layout>
                 </ProtectedRoute>
               } 

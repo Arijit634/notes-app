@@ -12,9 +12,8 @@ const DashboardPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { notes } = useSelector(state => state.notes);
-  const { dashboardStats: stats } = useSelector(state => state.user);
+  const { stats } = useSelector(state => state.user);
   const { recentActivities } = useSelector(state => state.activities);
-  const { activities: frontendActivities } = useSelector(state => state.activity);
   const { favoriteIds } = useSelector(state => state.favorites);
 
   useEffect(() => {
@@ -49,16 +48,11 @@ const DashboardPage = () => {
     if (window.confirm(`Are you sure you want to delete "${note.title}"?`)) {
       try {
         await dispatch(deleteNote(note.id)).unwrap();
-        // Don't refetch notes immediately since Redux already removed it
-        // Only refresh stats and activities after a short delay
-        setTimeout(() => {
-          dispatch(fetchUserStats());
-          dispatch(fetchRecentActivities(3));
-        }, 300);
+        // Refresh notes after deletion
+        dispatch(fetchNotes());
+        dispatch(fetchUserStats());
       } catch (error) {
         console.error('Failed to delete note:', error);
-        // Only refetch notes if there was an error
-        dispatch(fetchNotes());
       }
     }
   };
@@ -66,9 +60,7 @@ const DashboardPage = () => {
   const handleToggleFavorite = async (noteId) => {
     try {
       const note = notes.find(n => n.id === noteId);
-      await dispatch(toggleFavorite(noteId, note));
-      // Refresh activities to show favorite/unfavorite action
-      dispatch(fetchRecentActivities(3));
+      dispatch(toggleFavorite(noteId, note));
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
     }
@@ -82,58 +74,13 @@ const DashboardPage = () => {
     navigate('/notes');
   };
 
-  // Enhanced stats with favorites count and backend compatibility
+  // Enhanced stats with favorites count
   const enhancedStats = React.useMemo(() => {
-    // Calculate stats directly from the actual data like categories do
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const totalNotes = notes.length;
-    const notesThisWeek = notes.filter(note => 
-      new Date(note.createdAt) >= oneWeekAgo
-    ).length;
-    const favoriteNotes = favoriteIds.length;
-    
     return {
       ...stats,
-      // Use calculated values instead of backend values
-      totalNotes,
-      notesThisWeek,
-      favoriteNotes,
-      // Keep other backend stats if available
-      totalViews: stats?.totalViews || 0,
-      notesChange: stats?.notesChange,
-      weeklyChange: stats?.weeklyChange,
-      viewsChange: stats?.viewsChange,
+      favoriteNotes: favoriteIds.length
     };
-  }, [stats, notes, favoriteIds]);
-
-  // Combine backend activities with frontend activities (especially delete activities)
-  const combinedActivities = React.useMemo(() => {
-    const backend = recentActivities || [];
-    const frontend = frontendActivities || [];
-    
-    // Convert frontend activities to match backend format
-    const formattedFrontend = frontend
-      .filter(activity => activity.type === 'deleted') // Only include delete activities from frontend
-      .map(activity => ({
-        id: `frontend-${activity.id}`,
-        username: 'current-user',
-        action: 'DELETED',
-        resourceType: 'note',
-        resourceId: activity.noteId,
-        resourceTitle: activity.noteTitle,
-        description: null,
-        timestamp: activity.timestamp
-      }));
-    
-    // Combine and sort by timestamp (newest first)
-    const combined = [...backend, ...formattedFrontend]
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 10); // Show only latest 10 activities
-    
-    return combined;
-  }, [recentActivities, frontendActivities]);
+  }, [stats, favoriteIds]);
 
   return (
     <motion.div
@@ -145,7 +92,7 @@ const DashboardPage = () => {
       <Dashboard
         stats={enhancedStats}
         recentNotes={recentNotes}
-        activities={combinedActivities}
+        activities={recentActivities}
         onViewNote={handleViewNote}
         onEditNote={handleEditNote}
         onDeleteNote={handleDeleteNote}

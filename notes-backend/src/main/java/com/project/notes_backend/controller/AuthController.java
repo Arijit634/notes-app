@@ -34,7 +34,6 @@ import com.project.notes_backend.security.UserDetailsImpl;
 import com.project.notes_backend.security.jwt.JwtUtils;
 import com.project.notes_backend.security.request.LoginRequest;
 import com.project.notes_backend.security.request.SignupRequest;
-import com.project.notes_backend.security.request.TwoFactorLoginRequest;
 import com.project.notes_backend.security.response.LoginResponse;
 import com.project.notes_backend.security.response.MessageResponse;
 import com.project.notes_backend.security.response.UserInfoResponse;
@@ -86,23 +85,10 @@ public class AuthController {
             return new ResponseEntity<Object>(map, HttpStatus.NOT_FOUND);
         }
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-        // Check if user has 2FA enabled
-        User user = userRepository.findByUserName(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.isTwoFactorEnabled()) {
-            // Return a special response indicating 2FA is required
-            Map<String, Object> response = new HashMap<>();
-            response.put("requires2FA", true);
-            response.put("message", "Two-factor authentication required");
-            response.put("username", userDetails.getUsername());
-            return ResponseEntity.ok(response);
-        }
-
 //      Set the authentication
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
@@ -117,49 +103,6 @@ public class AuthController {
 
         // Return the response entity with the JWT token included in the response body
         return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/public/signin-2fa")
-    public ResponseEntity<?> completeTwoFactorLogin(@RequestBody TwoFactorLoginRequest request) {
-        try {
-            // Find the user
-            User user = userRepository.findByUserName(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Verify 2FA code
-            int code = Integer.parseInt(request.getVerificationCode());
-            boolean isValidCode = totpService.verifyCode(user.getTwoFactorSecret(), code);
-            if (!isValidCode) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("message", "Invalid 2FA code");
-                errorResponse.put("status", false);
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-            }
-
-            // Create authentication token
-            UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
-
-            // Collect roles
-            List<String> roles = userDetails.getAuthorities().stream()
-                    .map(item -> item.getAuthority())
-                    .collect(Collectors.toList());
-
-            // Prepare the response
-            LoginResponse response = new LoginResponse(userDetails.getUsername(), roles, jwtToken);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("message", "2FA login failed: " + e.getMessage());
-            errorResponse.put("status", false);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PostMapping("/public/signup")
@@ -228,9 +171,7 @@ public class AuthController {
                 user.getCredentialsExpiryDate(),
                 user.getAccountExpiryDate(),
                 user.isTwoFactorEnabled(),
-                roles,
-                user.getProfilePicture(),
-                user.getSignUpMethod()
+                roles
         );
 
         return ResponseEntity.ok().body(response);

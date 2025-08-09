@@ -23,4 +23,8 @@ public interface NoteService {
     Page<NoteResponseDTO> searchUserNotes(String username, String query, Pageable pageable);
 
     Map<String, Object> getUserNotesStats(String username);
+
+    NoteResponseDTO toggleFavorite(Long noteId, String username);
+
+    Page<NoteResponseDTO> getFavoriteNotes(String username, Pageable pageable);
 }
