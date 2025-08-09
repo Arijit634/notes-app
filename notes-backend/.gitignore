@@ -32,201 +32,63 @@ build/
 ### VS Code ###
 .vscode/
 
-# Ignore environment files containing secrets
+# Environment files with secrets
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-#exclude the bfg-1.15.0
+# Application properties files (contain sensitive data)
+src/main/resources/application*.properties
+src/test/resources/application*.properties
+application*.properties
+!src/main/resources/application.properties.template
+
+# Exclude large jar files
 bfg-1.15.0.jar
 
-# Development scripts and test files
+# Development and test scripts
 *.ps1
 *.sh
 *.bat
 *.cmd
-test-*.json
-*test*.sh
-*test*.ps1
-test-api.sh
-cleanup-*.ps1
-setup-*.sh
-install-*.bat
 
-# AI-generated files and documentation
-*AI_GENERATED*
-*GENERATED_BY_AI*
-*generated*
-ROADMAP*
-GUIDE*
-MANUAL*
-CHECKLIST*
-SUMMARY*
-
-# Postman collections and API documentation
-*Postman*.json
-*postman*.json
-Complete_Notes_API_Postman_Collection.json
-Notes-API-*.json
-api-docs/
-swagger-docs/
-
-# ALL Markdown files and documentation
+# ALL Markdown files (push manually when needed)
 *.md
 *.MD
-**/*.md
-**/*.MD
-HELP.md
-IMPLEMENTATION_*.md
-ENHANCEMENT_*.md
-ENTERPRISE_*.md
-TESTING_*.md
-POSTMAN_*.md
-COLLECTION_*.md
 
-# Allow only essential README
-!README.md
-
-# ALL JSON files except package.json and essential config
+# ALL JSON, TXT, SQL files (push manually when needed)
 *.json
-!package.json
-!tsconfig*.json
-!.vscode/settings.json
-
-# ALL application.properties files (sensitive configuration)
-**/application*.properties
-src/main/resources/application*.properties
-src/test/resources/application*.properties
-application.properties
-application-*.properties
-
-# ALL sensitive configuration files
-*.yml
-*.yaml
-!docker-compose.yml
-!.github/workflows/*.yml
-*.env
-*.env.*
-.env*
-configuration/
-
-# Production and sensitive configuration files
-# ALL sensitive files that contain passwords, secrets, keys
-application-local.properties
-application-dev.properties
-application-test.properties
-*.key
-*.pem
-*.p12
-*.jks
-*.keystore
-*.secret
-*.crt
-*.csr
-secrets/
-keys/
-certs/
-certificates/
-
-
-# Email and external service configurations
-*smtp*
-*secret*
-
-# Allow all files in test config and service/impl folders
-!src/test/java/com/project/notes_backend/config/
-!src/test/java/com/project/notes_backend/config/**
-!src/test/java/com/project/notes_backend/service/impl/
-!src/test/java/com/project/notes_backend/service/impl/**
-!src/test/java/com/project/notes_backend/security/**
-
-# Database connection strings and credentials
-*database*
-*db-config*
-*datasource*
-
-# Ignore specific unwanted auto-generated files
-src/main/java/com/project/notes_backend/config/WebSecurityConfig.java
-src/test/java/com/project/notes_backend/config/AppConfigTest.java
-src/test/java/com/project/notes_backend/config/WebSecurityConfigTest.java
-src/test/java/com/project/notes_backend/controller/AuditLogControllerTest.java
-src/test/java/com/project/notes_backend/controller/AuthControllerUnitTest.java
-src/test/java/com/project/notes_backend/controller/AuthControllerWebMvcTest.java
-src/test/java/com/project/notes_backend/integration/NotesApiIntegrationTest.java
-src/test/java/com/project/notes_backend/security/UserDetailsImplTest.java
-src/test/java/com/project/notes_backend/security/UserDetailsServiceImplTest.java
-
-# Docker files
-*.dockerfile
-Dockerfile
-docker-compose.override.yml
 *.txt
-*.conf
+*.sql
 *.csv
 
-# Local development and testing directories
-local/
-dev/
-scripts/
-test-data/
-sample-data/
-dev-scripts/
-local-scripts/
-docs/generated/
-documentation/
-temp/
-tmp/
-test-scripts/
+# Allow essential Maven config
+!pom.xml
 
-# Build and deployment artifacts
-build/
-dist/
-deploy/
-releases/
-artifacts/
+# Postman collections (keep if needed for development)
+Complete_Notes_API_Postman_Collection.json
+*Postman*.json
 
-# Log files and temporary files
+# Logs and temporary files
 *.log
 logs/
-spring.log
+hs_err_pid*
 *.tmp
 *.temp
 *.cache
-.cache/
-hs_err_pid*
-
 
 # Backup files
 *.bak
 *.backup
-*bkup*
 *backup*
-*Enhanced*
-*_New*
-*~
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 Desktop.ini
 
-# Database files
-*.db
-*.sqlite
+# Database files (local development only)
 *.h2.db
-
-# IDE temp files
-*~
-.swp
-.swo
-
-# Coverage and testing reports
-coverage/
-*.lcov
-.eslintcache
-
-README.md
-*.yml
+*.sqlite

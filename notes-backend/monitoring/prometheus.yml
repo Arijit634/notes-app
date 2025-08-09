@@ -1,0 +1,57 @@
+# ================================
+# PROMETHEUS CONFIGURATION
+# ================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    project: 'notes-backend'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Notes Backend Application
+  - job_name: 'notes-backend'
+    static_configs:
+      - targets: ['notes-backend:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+    scrape_timeout: 10s
+    honor_labels: true
+
+  # PostgreSQL Database
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-primary:5432']
+    # You would need postgres_exporter for this
+    # metrics_path: '/metrics'
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    # You would need redis_exporter for this
+    # metrics_path: '/metrics'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    # You would need node_exporter for this

@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exclude ALL PowerShell scripts
+*.ps1
+
+# Exclude ALL markdown files (push manually when needed)
+*.md
+*.MD
+
+# Exclude ALL JSON, TXT, SQL files except essential ones
+*.txt
+*.sql
+*.csv
+
+# Allow essential frontend config files
+!package.json
+!package-lock.json
+!vite.config.js
+!tsconfig*.json

@@ -1,7 +1,6 @@
 # Backend specific
 notes-backend/target/
 notes-backend/.mvn/wrapper/maven-wrapper.jar
-notes-backend/HELP.md
 
 # Frontend specific  
 notes-frontend/node_modules/
@@ -29,12 +28,27 @@ Thumbs.db
 logs/
 *.log
 
-#shell scripts
+# Exclude ALL PowerShell scripts
 *.ps1
 
-
+# Exclude ALL markdown files (push manually when needed)
 *.md
-!README.md
+*.MD
 
-*.jar
+# Exclude ALL JSON, TXT, SQL files (push manually when needed)
+*.json
 *.txt
+*.sql
+*.csv
+
+# Allow essential frontend config files
+!notes-frontend/package.json
+!notes-frontend/package-lock.json
+!notes-frontend/vite.config.js
+!notes-frontend/tsconfig*.json
+
+# Allow essential backend config files
+!notes-backend/pom.xml
+
+# Exclude specific large files
+bfg-1.15.0.jar
