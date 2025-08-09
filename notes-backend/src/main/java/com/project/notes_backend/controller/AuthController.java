@@ -1,11 +1,14 @@
 package com.project.notes_backend.controller;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -72,6 +75,9 @@ public class AuthController {
     AuthUtil authUtil;
     @Autowired
     TotpService totpService;
+
+    @Autowired
+    DataSource dataSource;
 
     @PostMapping("/public/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -420,6 +426,58 @@ public class AuthController {
         }
         response.put("timestamp", System.currentTimeMillis());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Database health check endpoint
+     */
+    @GetMapping("/public/db-health")
+    public ResponseEntity<?> databaseHealthCheck() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Test database connectivity
+            try (Connection conn = dataSource.getConnection()) {
+                response.put("database", "CONNECTED");
+                response.put("dbUrl", conn.getMetaData().getURL());
+                response.put("dbUser", conn.getMetaData().getUserName());
+                response.put("dbProduct", conn.getMetaData().getDatabaseProductName());
+                response.put("dbVersion", conn.getMetaData().getDatabaseProductVersion());
+            }
+
+            // Test UserRepository
+            try {
+                long userCount = userRepository.count();
+                response.put("userCount", userCount);
+                response.put("userRepository", "WORKING");
+            } catch (Exception e) {
+                response.put("userRepository", "ERROR: " + e.getMessage());
+                response.put("userRepositoryError", e.getClass().getSimpleName());
+            }
+
+            // Test RoleRepository
+            try {
+                long roleCount = roleRepository.count();
+                response.put("roleCount", roleCount);
+                response.put("roleRepository", "WORKING");
+            } catch (Exception e) {
+                response.put("roleRepository", "ERROR: " + e.getMessage());
+                response.put("roleRepositoryError", e.getClass().getSimpleName());
+            }
+
+            response.put("timestamp", System.currentTimeMillis());
+            response.put("status", "HEALTHY");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("database", "ERROR");
+            response.put("error", e.getMessage());
+            response.put("errorType", e.getClass().getSimpleName());
+            response.put("status", "UNHEALTHY");
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     /**

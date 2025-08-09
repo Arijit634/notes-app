@@ -42,7 +42,7 @@ const Modal = ({
 
   const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto">
         {/* Backdrop */}
         <motion.div
           className={cn(
@@ -53,6 +53,11 @@ const Modal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
+          onClick={closable ? onClose : undefined}
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'none'
+          }}
         />
 
         {/* Modal */}
@@ -60,6 +65,8 @@ const Modal = ({
           ref={modalRef}
           className={cn(
             'relative w-full bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800',
+            'max-h-[90vh] overflow-auto',
+            'mx-auto my-auto',
             sizeVariants[size],
             className
           )}
@@ -67,6 +74,10 @@ const Modal = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            WebkitOverflowScrolling: 'touch'
+          }}
           {...props}
         >
           {/* Header */}

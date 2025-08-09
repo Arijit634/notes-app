@@ -3,6 +3,8 @@ export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
+  // ENABLE_OAUTH: import.meta.env.VITE_ENABLE_OAUTH !== 'false', // Default true, can be disabled
+  // DEBUG: import.meta.env.VITE_DEBUG === 'true',
 };
 
 // API Endpoints (Based on actual backend implementation)

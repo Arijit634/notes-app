@@ -7,12 +7,31 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Prevent mobile emulation black screen */
+    min-height: 100vh;
+    height: auto;
   }
   
   body {
     @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300;
     font-family: 'Inter', system-ui, sans-serif;
     line-height: 1.6;
+    /* Ensure proper mobile rendering */
+    min-height: 100vh;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    /* Prevent weird mobile behavior */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  /* Root div styling for mobile */
+  #root {
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    flex-direction: column;
   }
   
   * {
@@ -132,6 +151,30 @@
   
   .nav-link-active {
     @apply nav-link bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300;
+  }
+
+  /* Mobile-specific utilities */
+  .mobile-safe-area {
+    @apply pb-safe-bottom;
+  }
+  
+  .mobile-scroll {
+    @apply overflow-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mobile-no-scroll {
+    @apply overflow-hidden;
+    position: fixed;
+    width: 100%;
+  }
+  
+  .mobile-touch-action {
+    touch-action: manipulation;
+  }
+  
+  .mobile-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 button:focus,

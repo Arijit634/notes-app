@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile, useKeyboardShortcut } from '../../hooks';
+import { useMobileScroll, useMobileTouchHandlers } from '../../hooks/useMobileScroll';
 import { logoutUser } from '../../store/slices/authSlice';
 import { toggleMobileMenu, toggleSidebar, toggleTheme } from '../../store/slices/uiSlice';
 import { cn } from '../../utils/ui';
@@ -24,6 +25,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const profileDropdownRef = useRef(null);
@@ -38,7 +40,13 @@ const Layout = ({ children }) => {
   
   const { user, isAuthenticated } = useSelector(state => state.auth);
 
-  // Close dropdowns when clicking outside
+  // Use mobile scroll hook to prevent body scroll when mobile menu is open
+  useMobileScroll(isMobile && mobileMenuOpen);
+  
+  // Enhance touch interactions
+  useMobileTouchHandlers();
+
+  // Close dropdowns when clicking outside and handle touch events
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
@@ -50,8 +58,10 @@ const Layout = ({ children }) => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, []);
 
@@ -94,7 +104,21 @@ const Layout = ({ children }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => dispatch(toggleMobileMenu())}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(toggleMobileMenu());
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(toggleMobileMenu());
+                }}
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'manipulation',
+                  cursor: 'pointer'
+                }}
               />
             )}
             
@@ -221,19 +245,29 @@ const Layout = ({ children }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 mobile-tap-highlight">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => isMobile ? dispatch(toggleMobileMenu()) : dispatch(toggleSidebar())}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  isMobile ? dispatch(toggleMobileMenu()) : dispatch(toggleSidebar());
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  isMobile ? dispatch(toggleMobileMenu()) : dispatch(toggleSidebar());
+                }}
+                className="touch-manipulation min-h-[44px] min-w-[44px]"
               >
                 <Bars3Icon className="w-5 h-5" />
               </Button>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {/* Notifications */}
               <div className="relative" ref={notificationsRef}>
                 <Button 
@@ -260,7 +294,12 @@ const Layout = ({ children }) => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                      className={cn(
+                        "absolute mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50",
+                        isMobile 
+                          ? "right-0 left-auto max-w-[90vw] w-72" 
+                          : "right-0"
+                      )}
                     >
                       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -316,7 +355,12 @@ const Layout = ({ children }) => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                      className={cn(
+                        "absolute mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50",
+                        isMobile 
+                          ? "right-0 left-auto max-w-[90vw] w-44" 
+                          : "right-0"
+                      )}
                     >
                       <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -355,12 +399,12 @@ const Layout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto mobile-scroll">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="p-6"
+            className="p-4 sm:p-6"
           >
             {children}
           </motion.div>

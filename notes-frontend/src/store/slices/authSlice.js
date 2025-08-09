@@ -236,18 +236,31 @@ const checkAuthStatus = createAsyncThunk(
     try {
       const token = tokenUtils.getToken();
       if (!token || tokenUtils.isTokenExpired(token)) {
+        // Clear invalid tokens
+        tokenUtils.clearTokens();
+        userUtils.clearUserInfo();
         return rejectWithValue('No valid token');
       }
       
-      // Try to get fresh user data from API
+      // Verify token with backend - this is critical for security
       try {
         const userInfo = await authAPI.getUserInfo();
         userUtils.setUserInfo(userInfo);
         return { token, user: userInfo };
       } catch (apiError) {
-        // If API call fails, fall back to cached user info
-        console.warn('Failed to refresh user info, using cached data:', apiError);
-        const userInfo = tokenUtils.getUserInfo();
+        // If API call fails with 401/403, token is invalid - clear it
+        if (apiError.response?.status === 401 || apiError.response?.status === 403) {
+          console.warn('Token is invalid or expired, clearing authentication');
+          tokenUtils.clearTokens();
+          userUtils.clearUserInfo();
+          return rejectWithValue('Token invalid or expired');
+        }
+        // For other errors (network issues, etc.), fall back to cached user info
+        console.warn('Failed to refresh user info due to network/server error, using cached data:', apiError);
+        const userInfo = userUtils.getUserInfo();
+        if (!userInfo) {
+          return rejectWithValue('No cached user info available');
+        }
         return { token, user: userInfo };
       }
     } catch (error) {
