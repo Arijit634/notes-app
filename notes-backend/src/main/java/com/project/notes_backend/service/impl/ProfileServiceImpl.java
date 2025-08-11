@@ -223,7 +223,8 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public String uploadProfilePicture(String username, MultipartFile file) {
-        log.info("Uploading profile picture for user: {}", username);
+        log.info("Uploading profile picture for user: {} - File size: {} bytes, Content type: {}",
+                username, file.getSize(), file.getContentType());
 
         User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
@@ -232,15 +233,33 @@ public class ProfileServiceImpl implements ProfileService {
             throw new RuntimeException("Please select a file to upload");
         }
 
-        // Validate file type
+        // Log detailed file information for debugging
+        log.debug("Original filename: {}, Size: {} MB", file.getOriginalFilename(), file.getSize() / (1024.0 * 1024.0));
+
+        // Validate file type - be more lenient with mobile uploads
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new RuntimeException("Only image files are allowed");
+        if (contentType == null) {
+            log.warn("Content type is null, checking file extension");
+            String filename = file.getOriginalFilename();
+            if (filename != null) {
+                String ext = filename.toLowerCase();
+                if (!ext.endsWith(".jpg") && !ext.endsWith(".jpeg") && !ext.endsWith(".png")
+                        && !ext.endsWith(".gif") && !ext.endsWith(".webp") && !ext.endsWith(".heic")) {
+                    throw new RuntimeException("Only image files are allowed (jpg, jpeg, png, gif, webp, heic)");
+                }
+            } else {
+                throw new RuntimeException("Unable to determine file type");
+            }
+        } else if (!contentType.startsWith("image/") && !contentType.equals("application/octet-stream")) {
+            // Allow application/octet-stream as some mobile browsers send this for images
+            throw new RuntimeException("Only image files are allowed. Received: " + contentType);
         }
 
-        // Validate file size (5MB max)
-        if (file.getSize() > 5 * 1024 * 1024) {
-            throw new RuntimeException("File size should not exceed 5MB");
+        // Validate file size (10MB max for mobile compatibility)
+        long maxSize = 10 * 1024 * 1024; // Increased to 10MB for mobile photos
+        if (file.getSize() > maxSize) {
+            log.warn("File size {} exceeds maximum allowed size {}", file.getSize(), maxSize);
+            throw new RuntimeException("File size should not exceed 10MB");
         }
 
         try {
@@ -248,10 +267,21 @@ public class ProfileServiceImpl implements ProfileService {
             Path uploadPath = Paths.get(uploadDir, "profile-pictures");
             Files.createDirectories(uploadPath);
 
-            // Generate unique filename
+            // Generate unique filename with proper extension handling
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String fileExtension = ".jpg"; // Default to jpg
+            if (originalFilename != null && originalFilename.contains(".")) {
+                String ext = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+                // Convert HEIC to jpg for better compatibility
+                if (ext.equals(".heic") || ext.equals(".heif")) {
+                    fileExtension = ".jpg";
+                } else if (ext.matches("\\.(jpg|jpeg|png|gif|webp)")) {
+                    fileExtension = ext;
+                }
+            }
+
             String newFilename = username + "_" + UUID.randomUUID().toString() + fileExtension;
+            log.info("Generated filename: {}", newFilename);
 
             // Delete old profile picture if exists
             if (StringUtils.hasText(user.getProfilePicture())) {
@@ -261,6 +291,8 @@ public class ProfileServiceImpl implements ProfileService {
             // Save file
             Path filePath = uploadPath.resolve(newFilename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("File saved successfully at: {}", filePath.toString());
 
             // Update user profile picture URL
             String profilePictureUrl = baseUrl + "/api/profile/picture/" + newFilename;

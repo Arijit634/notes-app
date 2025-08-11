@@ -374,11 +374,40 @@ export const profileAPI = {
   },
 
   uploadProfilePicture: async (file) => {
+    console.log('Uploading profile picture:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      sizeMB: (file.size / (1024 * 1024)).toFixed(2)
+    });
+
+    // Validate file size on frontend (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      throw new Error(`File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds maximum allowed size (10MB)`);
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+    if (!allowedTypes.includes(file.type) && file.type !== 'application/octet-stream') {
+      // Some mobile browsers might send application/octet-stream for images
+      const isImageFile = /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+      if (!isImageFile) {
+        throw new Error('Only image files are allowed (JPG, PNG, GIF, WebP, HEIC)');
+      }
+    }
+
     const formData = new FormData();
     formData.append('file', file);
+    
     const response = await apiClient.post(API_ENDPOINTS.PROFILE.UPLOAD_PICTURE, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 seconds timeout for mobile uploads
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        console.log(`Upload progress: ${percentCompleted}%`);
       },
     });
     return response.data;
