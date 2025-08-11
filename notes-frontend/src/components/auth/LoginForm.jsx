@@ -1,8 +1,8 @@
 import {
-  EyeIcon,
-  EyeSlashIcon,
-  LockClosedIcon,
-  UserIcon
+    EyeIcon,
+    EyeSlashIcon,
+    LockClosedIcon,
+    UserIcon
 } from '@heroicons/react/24/outline';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { motion } from 'framer-motion';
@@ -21,8 +21,8 @@ import TwoFactorModal from './TwoFactorModal';
 const loginSchema = yup.object({
   username: yup
     .string()
-    .required('Username is required')
-    .min(3, 'Username must be at least 3 characters'),
+    .required('Username or email is required')
+    .min(3, 'Username or email must be at least 3 characters'),
   password: yup
     .string()
     .required('Password is required')
@@ -101,9 +101,9 @@ const LoginForm = ({ onSwitchToRegister, onForgotPassword }) => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Input
-            label="Username"
+            label="Username or Email"
             type="text"
-            placeholder="Enter your username"
+            placeholder="Enter your username or email"
             leftIcon={<UserIcon className="w-4 h-4" />}
             error={errors.username?.message}
             {...register('username')}

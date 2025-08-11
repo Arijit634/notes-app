@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_CONFIG } from '../constants/api.js';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = `${API_CONFIG.BASE_URL}/api/auth`;
 
 // Create axios instance with default config
 const authAPI = axios.create({

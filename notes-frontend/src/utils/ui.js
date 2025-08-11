@@ -93,6 +93,43 @@ export async function copyToClipboard(text) {
 }
 
 /**
+ * Read text from clipboard with proper error handling
+ */
+export async function readFromClipboard() {
+  try {
+    // Check if clipboard API is available and we're in secure context
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      throw new Error('Clipboard API not available');
+    }
+    
+    // Check if we're in a secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      throw new Error('Clipboard API requires secure context (HTTPS)');
+    }
+    
+    const text = await navigator.clipboard.readText();
+    return { success: true, text };
+  } catch (err) {
+    console.warn('Clipboard read failed:', err.message);
+    
+    // For deployed apps without HTTPS, show instructions
+    if (err.message.includes('secure context') || err.name === 'NotAllowedError') {
+      return { 
+        success: false, 
+        error: 'Paste requires HTTPS. Please use Ctrl+V or right-click paste instead.',
+        fallback: true
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: 'Clipboard access denied. Please use Ctrl+V or right-click paste.',
+      fallback: true
+    };
+  }
+}
+
+/**
  * Check if device is mobile
  */
 export function isMobile() {

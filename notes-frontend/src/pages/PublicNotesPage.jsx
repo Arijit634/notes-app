@@ -185,7 +185,19 @@ const PublicNoteCard = ({ note }) => {
           </h3>
           
           <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-            <span>By {note.user?.userName || 'Anonymous'}</span>
+            <div className="flex items-center gap-2">
+              {note.authorProfilePicture && (
+                <img 
+                  src={note.authorProfilePicture} 
+                  alt={note.authorDisplayName || note.authorName || 'User'} 
+                  className="w-6 h-6 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
+              <span>By {note.authorDisplayName || note.authorName || note.ownerUsername || 'Anonymous'}</span>
+            </div>
             <span>{dateUtils.formatDate(note.createdAt)}</span>
           </div>
         </div>

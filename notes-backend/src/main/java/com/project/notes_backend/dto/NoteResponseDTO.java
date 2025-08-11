@@ -21,6 +21,8 @@ public class NoteResponseDTO {
     private String description;
     private String ownerUsername;
     private String authorName; // alias for ownerUsername
+    private String authorDisplayName; // Full name for display
+    private String authorProfilePicture; // Profile picture URL
     private String category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

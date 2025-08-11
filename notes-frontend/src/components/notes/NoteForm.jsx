@@ -1,15 +1,17 @@
 import {
-  DocumentTextIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  PlusIcon,
-  TagIcon,
-  XMarkIcon
+    ClipboardDocumentIcon,
+    DocumentTextIcon,
+    EyeIcon,
+    EyeSlashIcon,
+    PlusIcon,
+    TagIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { useClipboard } from '../../hooks';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -48,7 +50,9 @@ const NoteForm = ({
 }) => {
   const [newTag, setNewTag] = useState('');
   const [isPreview, setIsPreview] = useState(false);
+  const [pasteStatus, setPasteStatus] = useState('');
   const contentRef = useRef(null);
+  const { readFromClipboard } = useClipboard();
 
   const {
     register,
@@ -125,6 +129,38 @@ const NoteForm = ({
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 1;
       }, 0);
+    }
+  };
+
+  const handlePasteFromClipboard = async () => {
+    setPasteStatus('reading');
+    try {
+      const result = await readFromClipboard();
+      
+      if (result.success) {
+        const currentContent = watchedValues.content || '';
+        const newContent = currentContent + (currentContent ? '\n\n' : '') + result.text;
+        setValue('content', newContent);
+        setPasteStatus('success');
+        setTimeout(() => setPasteStatus(''), 2000);
+      } else {
+        setPasteStatus('error');
+        
+        // Show user-friendly instructions for HTTP deployments
+        if (result.fallback) {
+          const isHTTP = window.location.protocol === 'http:' && !window.location.hostname.includes('localhost');
+          const message = isHTTP 
+            ? 'Paste button requires HTTPS. Please:\n1. Use Ctrl+V (or Cmd+V on Mac) to paste\n2. Or right-click and select "Paste"\n\nThis is a browser security limitation for HTTP sites.'
+            : result.error;
+          
+          alert(message);
+        }
+        setTimeout(() => setPasteStatus(''), 3000);
+      }
+    } catch (error) {
+      setPasteStatus('error');
+      console.error('Paste error:', error);
+      setTimeout(() => setPasteStatus(''), 3000);
     }
   };
 
@@ -257,9 +293,32 @@ const NoteForm = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Content
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Content
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handlePasteFromClipboard}
+                  disabled={pasteStatus === 'reading'}
+                  className={`
+                    ${pasteStatus === 'success' ? 'border-green-500 text-green-600 dark:text-green-400' : ''}
+                    ${pasteStatus === 'error' ? 'border-red-500 text-red-600 dark:text-red-400' : ''}
+                  `}
+                  title={
+                    window.location.protocol === 'http:' && !window.location.hostname.includes('localhost')
+                      ? 'Paste button requires HTTPS. Use Ctrl+V instead on this site.'
+                      : 'Paste content from clipboard'
+                  }
+                >
+                  <ClipboardDocumentIcon className="w-4 h-4 mr-1" />
+                  {pasteStatus === 'reading' ? 'Pasting...' : 
+                   pasteStatus === 'success' ? 'Pasted!' : 
+                   pasteStatus === 'error' ? 'Failed' : 'Paste'}
+                </Button>
+              </div>
               <textarea
                 ref={contentRef}
                 rows={12}
@@ -268,6 +327,14 @@ const NoteForm = ({
                 onKeyDown={handleKeyDown}
                 {...register('content')}
               />
+              
+              {/* Show paste instructions for HTTP sites */}
+              {window.location.protocol === 'http:' && !window.location.hostname.includes('localhost') && (
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                  💡 Tip: Use Ctrl+V (or Cmd+V on Mac) to paste content. Paste button requires HTTPS.
+                </p>
+              )}
+              
               {errors.content && (
                 <p className="mt-1 text-sm text-error-600 dark:text-error-400">
                   {errors.content.message}

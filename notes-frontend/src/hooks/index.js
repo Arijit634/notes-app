@@ -192,6 +192,81 @@ export function useCopyToClipboard() {
 }
 
 /**
+ * Hook to read from clipboard with proper error handling
+ */
+export function useClipboard() {
+  const [clipboardText, setClipboardText] = useState('');
+  const [isReading, setIsReading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const readFromClipboard = async () => {
+    setIsReading(true);
+    setError(null);
+    
+    try {
+      // Check if clipboard API is available and we're in secure context
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        throw new Error('Clipboard API not available');
+      }
+      
+      // Check if we're in a secure context (HTTPS or localhost)
+      if (!window.isSecureContext) {
+        throw new Error('Clipboard API requires secure context (HTTPS)');
+      }
+      
+      const text = await navigator.clipboard.readText();
+      setClipboardText(text);
+      setIsReading(false);
+      return { success: true, text };
+    } catch (err) {
+      console.warn('Clipboard read failed:', err.message);
+      setIsReading(false);
+      
+      // For deployed apps without HTTPS, provide helpful error
+      if (err.message.includes('secure context') || err.name === 'NotAllowedError') {
+        const errorMsg = 'Paste requires HTTPS. Please use Ctrl+V or right-click paste instead.';
+        setError(errorMsg);
+        return { success: false, error: errorMsg, fallback: true };
+      }
+      
+      const errorMsg = 'Clipboard access denied. Please use Ctrl+V or right-click paste.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg, fallback: true };
+    }
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return { success: true };
+    } catch (err) {
+      // Fallback for older browsers or HTTP contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: 'Copy failed' };
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  };
+
+  return { 
+    clipboardText, 
+    isReading, 
+    error, 
+    readFromClipboard, 
+    copyToClipboard 
+  };
+}
+
+/**
  * Hook to handle async operations with loading states
  */
 export function useAsync(asyncFunction, dependencies = []) {

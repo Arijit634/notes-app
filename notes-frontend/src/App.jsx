@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Spinner } from './components/common';
 import Layout from './components/layout/Layout';
-import { AuthPage, CategoriesPage, DashboardPage, FavoritesPage, NotesPage, OAuth2FAPage, OAuthSuccessPage, ProfilePage, PublicNotesPage } from './pages';
+import { AuthPage, CategoriesPage, DashboardPage, FavoritesPage, NotesPage, OAuth2FAPage, OAuthSuccessPage, ProfilePage, PublicNotesPage, ResetPasswordPage } from './pages';
 import { checkAuthStatus } from './store/slices/authSlice';
 
 // Protected Route component
@@ -92,6 +92,16 @@ const App = () => {
             <Route 
               path="/oauth2/2fa" 
               element={<OAuth2FAPage />} 
+            />
+
+            {/* Password Reset Route */}
+            <Route 
+              path="/reset-password" 
+              element={
+                <PublicRoute>
+                  <ResetPasswordPage />
+                </PublicRoute>
+              } 
             />
 
             {/* Protected Routes */}

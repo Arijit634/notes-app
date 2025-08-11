@@ -7,4 +7,5 @@ export { default as OAuth2FAPage } from './OAuth2FAPage';
 export { default as OAuthSuccessPage } from './OAuthSuccessPage';
 export { default as ProfilePage } from './ProfilePage';
 export { default as PublicNotesPage } from './PublicNotesPage';
+export { default as ResetPasswordPage } from './ResetPasswordPage';
 

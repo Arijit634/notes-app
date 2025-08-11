@@ -238,12 +238,34 @@ public class NoteServiceImpl implements NoteService {
         dto.setCategory(note.getCategory());
         dto.setOwnerUsername(note.getOwnerUsername());
         dto.setAuthorName(note.getOwnerUsername()); // Set authorName same as ownerUsername
+
+        // Fetch user profile information for display
+        try {
+            User noteOwner = userRepository.findByUserName(note.getOwnerUsername()).orElse(null);
+            if (noteOwner != null) {
+                // Use username as display name (since no firstName/lastName fields exist)
+                dto.setAuthorDisplayName(noteOwner.getUserName());
+
+                // Set profile picture URL (if available)
+                dto.setAuthorProfilePicture(noteOwner.getProfilePicture());
+            } else {
+                // Fallback if user not found
+                dto.setAuthorDisplayName(note.getOwnerUsername());
+                dto.setAuthorProfilePicture(null);
+            }
+        } catch (Exception e) {
+            // Fallback in case of any error
+            log.warn("Failed to fetch user profile for note owner: {}", note.getOwnerUsername(), e);
+            dto.setAuthorDisplayName(note.getOwnerUsername());
+            dto.setAuthorProfilePicture(null);
+        }
+
         dto.setCreatedAt(note.getCreatedAt());
         dto.setUpdatedAt(note.getUpdatedAt());
         dto.setShared(note.isShared());
         dto.setShareCount(note.getShareCount());
         dto.setFavorite(note.isFavorite());
-        dto.setPublic(note.getIsPublic() != null ? note.getIsPublic() : false);
+        dto.setPublic(note.getIsPublic() != null && note.getIsPublic());
         return dto;
     }
 
