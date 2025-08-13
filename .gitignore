@@ -1,6 +1,7 @@
 # Backend specific
 notes-backend/target/
 notes-backend/.mvn/wrapper/maven-wrapper.jar
+notes-backend/uploads/
 
 # Frontend specific  
 notes-frontend/node_modules/

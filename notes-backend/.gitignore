@@ -1,3 +1,11 @@
+# Ignore all uploads folder contents (CRITICAL: No profile pictures in Git!)
+uploads/
+uploads/**/*
+
+# But keep the folder structure with placeholder files
+!uploads/.gitkeep
+!uploads/profile-pictures/.gitkeep
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -92,3 +100,4 @@ Desktop.ini
 # Database files (local development only)
 *.h2.db
 *.sqlite
+
