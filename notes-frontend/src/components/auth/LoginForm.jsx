@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
 import { API_CONFIG, API_ENDPOINTS } from '../../constants/api';
-import { clearError, loginUser } from '../../store/slices/authSlice';
+import { clearError, loginUser, setTwoFactorRequired } from '../../store/slices/authSlice';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import Input from '../common/Input';
@@ -63,6 +63,7 @@ const LoginForm = ({ onSwitchToRegister, onForgotPassword }) => {
 
   const handleCancel2FA = () => {
     dispatch(clearError());
+    dispatch(setTwoFactorRequired(false));
     // Reset form or any other cleanup needed
   };
 

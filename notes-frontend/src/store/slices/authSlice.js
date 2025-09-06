@@ -315,6 +315,12 @@ const authSlice = createSlice({
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
         userUtils.setUserInfo(state.user);
+        
+        // Update token if provided
+        if (action.payload.token) {
+          state.token = action.payload.token;
+          tokenUtils.setToken(action.payload.token);
+        }
       }
     },
   },
@@ -526,7 +532,7 @@ const authSlice = createSlice({
 });
 
 export {
-  checkAuthStatus, completeTwoFactorLogin, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
+    checkAuthStatus, completeTwoFactorLogin, disable2FA, enable2FA, forgotPassword, loginUser, logoutUser, refreshUserInfo, registerUser, resetPassword, verify2FA, verifyEmail
 };
 
 export const { 

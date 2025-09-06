@@ -6,9 +6,11 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.notes_backend.model.Note;
 
@@ -104,4 +106,10 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // Public notes queries
     Page<Note> findByIsPublicTrue(Pageable pageable);
+
+    // CRITICAL FIX: Update owner username for all notes when user changes username
+    @Modifying
+    @Transactional
+    @Query("UPDATE Note n SET n.ownerUsername = :newUsername WHERE n.ownerUsername = :oldUsername")
+    int updateOwnerUsername(@Param("oldUsername") String oldUsername, @Param("newUsername") String newUsername);
 }

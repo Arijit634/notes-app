@@ -18,11 +18,15 @@ import org.springframework.web.multipart.MultipartFile;
 import com.project.notes_backend.dto.PasswordChangeRequestDTO;
 import com.project.notes_backend.dto.ProfileResponseDTO;
 import com.project.notes_backend.dto.ProfileUpdateRequestDTO;
+import com.project.notes_backend.dto.ProfileUpdateResponseDTO;
 import com.project.notes_backend.dto.TwoFactorSetupDTO;
 import com.project.notes_backend.dto.TwoFactorVerificationDTO;
 import com.project.notes_backend.exception.ResourceNotFoundException;
 import com.project.notes_backend.model.User;
+import com.project.notes_backend.repository.NoteRepository;
 import com.project.notes_backend.repository.UserRepository;
+import com.project.notes_backend.security.UserDetailsImpl;
+import com.project.notes_backend.security.jwt.JwtUtils;
 import com.project.notes_backend.service.ProfileService;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
@@ -40,6 +44,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private NoteRepository noteRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -61,25 +71,39 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public ProfileResponseDTO updateProfile(String username, ProfileUpdateRequestDTO request) {
+    public ProfileUpdateResponseDTO updateProfile(String username, ProfileUpdateRequestDTO request) {
         log.info("Updating profile for user: {}", username);
 
         User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
+        boolean usernameChanged = false;
+        String newToken = null;
+
         // Update fields if provided
         if (StringUtils.hasText(request.getUserName()) && !request.getUserName().equals(user.getUserName())) {
             // Check if new username is available
             if (userRepository.existsByUserName(request.getUserName())) {
-                throw new RuntimeException("Username already exists: " + request.getUserName());
+                throw new RuntimeException("User with that username already exists");
             }
-            user.setUserName(request.getUserName());
+            
+            String oldUsername = user.getUserName();
+            String newUsername = request.getUserName();
+            
+            // Update user's username
+            user.setUserName(newUsername);
+            usernameChanged = true;
+            
+            // CRITICAL FIX: Update all notes' ownerUsername field to maintain consistency
+            log.info("Updating notes ownerUsername from '{}' to '{}' for user ID: {}", oldUsername, newUsername, user.getUserId());
+            int updatedNotes = noteRepository.updateOwnerUsername(oldUsername, newUsername);
+            log.info("Updated {} notes with new username", updatedNotes);
         }
 
         if (StringUtils.hasText(request.getEmail()) && !request.getEmail().equals(user.getEmail())) {
             // Check if new email is available
             if (userRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("Email already exists: " + request.getEmail());
+                throw new RuntimeException("User with that email already exists");
             }
             user.setEmail(request.getEmail());
         }
@@ -93,9 +117,21 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         User savedUser = userRepository.save(user);
+
+        // Generate new JWT token if username was changed
+        if (usernameChanged) {
+            UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
+            newToken = jwtUtils.generateTokenFromUsername(userDetails);
+            log.info("Generated new JWT token for updated username: {}", savedUser.getUserName());
+        }
+
         log.info("Profile updated successfully for user: {}", username);
 
-        return convertToProfileResponseDTO(savedUser);
+        ProfileResponseDTO profileResponse = convertToProfileResponseDTO(savedUser);
+        String message = usernameChanged ? "Profile updated successfully. Please use your new username for future logins." 
+                                         : "Profile updated successfully";
+        
+        return new ProfileUpdateResponseDTO(profileResponse, newToken, message);
     }
 
     @Override

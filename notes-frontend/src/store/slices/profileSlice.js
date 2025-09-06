@@ -16,9 +16,19 @@ export const fetchUserProfile = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'profile/updateProfile',
-  async (profileData, { rejectWithValue }) => {
+  async (profileData, { rejectWithValue, dispatch }) => {
     try {
       const response = await profileAPI.updateProfile(profileData);
+      
+      // If token was updated (username changed), update auth slice
+      if (response.newToken && response.profile) {
+        const { updateUserInfo } = await import('./authSlice');
+        dispatch(updateUserInfo({
+          ...response.profile,
+          token: response.newToken
+        }));
+      }
+      
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
@@ -153,8 +163,34 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload;
-        state.successMessage = 'Profile updated successfully';
+        
+        // The backend now returns { profile, newToken, message }
+        const responseData = action.payload;
+        
+        // Update profile data
+        if (responseData.profile) {
+          state.profile = responseData.profile;
+        } else {
+          // Fallback for old response format
+          state.profile = responseData;
+        }
+        
+        // Handle success message
+        state.successMessage = responseData.message || 'Profile updated successfully';
+        
+        // Store new token if provided (username was changed)
+        if (responseData.newToken) {
+          // Update token in localStorage
+          localStorage.setItem('token', responseData.newToken);
+          
+          // Update user info in localStorage
+          if (responseData.profile) {
+            const userInfo = {
+              ...responseData.profile
+            };
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+          }
+        }
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;

@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.project.notes_backend.dto.PasswordChangeRequestDTO;
 import com.project.notes_backend.dto.ProfileResponseDTO;
 import com.project.notes_backend.dto.ProfileUpdateRequestDTO;
+import com.project.notes_backend.dto.ProfileUpdateResponseDTO;
 import com.project.notes_backend.dto.TwoFactorSetupDTO;
 import com.project.notes_backend.dto.TwoFactorVerificationDTO;
 import com.project.notes_backend.service.ProfileService;
@@ -62,13 +63,13 @@ public class ProfileController {
      * Update current user's profile
      */
     @PutMapping
-    public ResponseEntity<ProfileResponseDTO> updateProfile(
+    public ResponseEntity<ProfileUpdateResponseDTO> updateProfile(
             @Valid @RequestBody ProfileUpdateRequestDTO request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         try {
-            ProfileResponseDTO updatedProfile = profileService.updateProfile(userDetails.getUsername(), request);
-            return ResponseEntity.ok(updatedProfile);
+            ProfileUpdateResponseDTO response = profileService.updateProfile(userDetails.getUsername(), request);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Failed to update profile for user: {}", userDetails.getUsername(), e);
             return ResponseEntity.badRequest().build();

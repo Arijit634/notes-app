@@ -51,5 +51,8 @@ logs/
 # Allow essential backend config files
 !notes-backend/pom.xml
 
-# Exclude specific large files
 bfg-1.15.0.jar
+notes-backend/notes-backend-with-seamless-username-updates-20250906-204702.jar
+
+# Exclude portfolio project (separate repository)
+portfolio-website/
