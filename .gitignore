@@ -56,3 +56,7 @@ notes-backend/notes-backend-with-seamless-username-updates-20250906-204702.jar
 
 # Exclude portfolio project (separate repository)
 portfolio-website/
+
+# Exclude development scripts and test directories
+start-dev.sh
+api-key-tests/
