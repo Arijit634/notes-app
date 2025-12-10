@@ -15,6 +15,8 @@ phases:
   pre_build:
     commands:
       - echo "Pre-build phase started on `date`"
+      - echo "Changing to notes-backend directory..."
+      - cd notes-backend
       - echo "Running tests..."
       - chmod +x ./mvnw
       - ./mvnw clean test
@@ -30,14 +32,14 @@ phases:
     commands:
       - echo "Post-build phase started on `date`"
       - echo "Preparing deployment artifacts..."
-      - mv target/*.jar application.jar
-      - ls -la
+      - mv notes-backend/target/*.jar notes-backend/application.jar
+      - ls -la notes-backend/
       
 artifacts:
   files:
-    - application.jar
-    - .ebextensions/**/*
-    - Procfile
+    - notes-backend/application.jar
+    - notes-backend/.ebextensions/**/*
+    - notes-backend/Procfile
   name: notes-backend-$(date +%Y%m%d-%H%M%S).zip
   
 cache:
@@ -47,5 +49,5 @@ cache:
 reports:
   test-results:
     files:
-      - 'target/surefire-reports/*.xml'
+      - 'notes-backend/target/surefire-reports/*.xml'
     file-format: 'JUNITXML'
