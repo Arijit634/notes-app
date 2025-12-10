@@ -47,4 +47,3 @@ artifacts:
 cache:
   paths:
     - '/root/.m2/**/*'
-    file-format: 'JUNITXML'
