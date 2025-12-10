@@ -1,0 +1,51 @@
+version: 0.2
+
+# AWS CodeBuild specification for Spring Boot Notes Backend
+# This file defines the build process for CI/CD pipeline
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+    commands:
+      - echo "Installing dependencies..."
+      - echo "Java version:"
+      - java -version
+      
+  pre_build:
+    commands:
+      - echo "Pre-build phase started on `date`"
+      - echo "Running tests..."
+      - chmod +x ./mvnw
+      - ./mvnw clean test
+      
+  build:
+    commands:
+      - echo "Build phase started on `date`"
+      - echo "Building JAR file..."
+      - ./mvnw clean package -DskipTests
+      - echo "Build completed on `date`"
+      
+  post_build:
+    commands:
+      - echo "Post-build phase started on `date`"
+      - echo "Preparing deployment artifacts..."
+      - mv target/*.jar application.jar
+      - ls -la
+      
+artifacts:
+  files:
+    - application.jar
+    - .ebextensions/**/*
+    - Procfile
+  name: notes-backend-$(date +%Y%m%d-%H%M%S).zip
+  
+cache:
+  paths:
+    - '/root/.m2/**/*'
+
+reports:
+  test-results:
+    files:
+      - 'target/surefire-reports/*.xml'
+    file-format: 'JUNITXML'
