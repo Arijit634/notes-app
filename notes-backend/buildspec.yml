@@ -47,10 +47,4 @@ artifacts:
 cache:
   paths:
     - '/root/.m2/**/*'
-
-reports:
-  test-results:
-    files:
-      - 'target/surefire-reports/*.xml'
-    base-directory: notes-backend
     file-format: 'JUNITXML'
