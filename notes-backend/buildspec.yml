@@ -38,7 +38,6 @@ phases:
 artifacts:
   files:
     - application.jar
-    - .ebextensions/**/*
     - Procfile
   name: notes-backend-$(date +%Y%m%d-%H%M%S).zip
   discard-paths: no
