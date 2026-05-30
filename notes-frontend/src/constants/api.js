@@ -1,18 +1,7 @@
 // API Configuration Constants
 const getApiBaseUrl = () => {
   const defaultUrl = 'http://localhost:5000';
-  const configuredUrl = import.meta.env.VITE_API_BASE_URL || defaultUrl;
-
-  if (
-    typeof window !== 'undefined' &&
-    window.location.protocol === 'https:' &&
-    configuredUrl.startsWith('http://') &&
-    !configuredUrl.includes('localhost')
-  ) {
-    return configuredUrl.replace(/^http:/, 'https:');
-  }
-
-  return configuredUrl;
+  return import.meta.env.VITE_API_BASE_URL || defaultUrl;
 };
 
 export const API_CONFIG = {
