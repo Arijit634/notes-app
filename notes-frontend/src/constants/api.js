@@ -1,6 +1,22 @@
 // API Configuration Constants
+const getApiBaseUrl = () => {
+  const defaultUrl = 'http://localhost:5000';
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL || defaultUrl;
+
+  if (
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    configuredUrl.startsWith('http://') &&
+    !configuredUrl.includes('localhost')
+  ) {
+    return configuredUrl.replace(/^http:/, 'https:');
+  }
+
+  return configuredUrl;
+};
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  BASE_URL: getApiBaseUrl(),
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   // ENABLE_OAUTH: import.meta.env.VITE_ENABLE_OAUTH !== 'false', // Default true, can be disabled
@@ -31,7 +47,7 @@ export const API_ENDPOINTS = {
     PUBLIC_TEST: '/auth/public/test',
     PUBLIC_LOGIN: '/auth/public/login',
   },
-  
+
   // Notes endpoints (Based on actual backend implementation)
   NOTES: {
     BASE: '/api/notes',
@@ -43,7 +59,7 @@ export const API_ENDPOINTS = {
     STATS: '/api/notes/stats',
     TOGGLE_FAVORITE: (id) => `/api/notes/${id}/favorite`,
   },
-  
+
   // Profile endpoints
   PROFILE: {
     BASE: '/api/profile',
