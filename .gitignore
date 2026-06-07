@@ -35,6 +35,7 @@ logs/
 # Exclude ALL markdown files (push manually when needed)
 *.md
 *.MD
+!.github/*.md
 
 # Exclude ALL JSON, TXT, SQL files (push manually when needed)
 *.json

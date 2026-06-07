@@ -38,6 +38,8 @@ public class CorsConfig {
                 "https://*.netlify.app", // Netlify deployments
                 "http://*.s3-website-*.amazonaws.com", // S3 static website hosting
                 "https://*.s3-website-*.amazonaws.com", // S3 static website hosting with HTTPS
+                "http://*.s3-website.*.amazonaws.com", // S3 static website hosting (dot-style region host)
+                "https://*.s3-website.*.amazonaws.com", // S3 static website hosting with HTTPS (dot-style region host)
                 "http://*.s3.amazonaws.com", // S3 bucket direct access
                 "https://*.s3.amazonaws.com", // S3 bucket direct access with HTTPS
                 "https://*.cloudfront.net" // CloudFront distributions

@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../components/common/Button';
 import { authAPI, tokenUtils } from '../services/api';
-import { logout as logoutAction } from '../store/slices/authSlice';
+import { loginUser, logout as logoutAction } from '../store/slices/authSlice';
 
 const OAuth2FAPage = () => {
   const [searchParams] = useSearchParams();
@@ -42,15 +42,29 @@ const OAuth2FAPage = () => {
     try {
       const response = await authAPI.verifyOAuth2FA(parseInt(verificationCode), username);
       
-      // Store token and user info
+      // Store token first so the profile request is authenticated.
       tokenUtils.setToken(response.token);
-      tokenUtils.setUserInfo({
-        username: response.username,
-        email: response.email
-      });
+
+      let userInfo;
+      try {
+        userInfo = await authAPI.getUserInfo();
+      } catch (profileError) {
+        console.error('Failed to fetch complete user info after OAuth 2FA:', profileError);
+        userInfo = {
+          userName: response.username,
+          email: response.email,
+          provider: provider || 'oauth2'
+        };
+      }
+
+      tokenUtils.setUserInfo(userInfo);
+      dispatch(loginUser.fulfilled({
+        user: userInfo,
+        token: response.token,
+      }));
 
       toast.success('2FA verification successful!');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('OAuth 2FA verification error:', error);
       toast.error(error.response?.data?.error || 'Invalid verification code');

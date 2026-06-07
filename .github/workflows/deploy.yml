@@ -1,0 +1,115 @@
+name: CI/CD Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-north-1
+  AWS_ROLE_TO_ASSUME: arn:aws:iam::623210504048:role/notes-app-github-actions-deploy-role
+  EB_APPLICATION_NAME: notes-app
+  EB_ENVIRONMENT_NAME: notes-backend-env
+  EB_SOURCE_BUCKET: elasticbeanstalk-eu-north-1-623210504048
+  FRONTEND_BUCKET: notes-frontend-20260528-1905
+  FRONTEND_DISTRIBUTION_ID: E186OZUPMQVPEZ
+  FRONTEND_URL: https://d3j8utz8n117oc.cloudfront.net
+  BACKEND_HEALTH_URL: https://d3a30owjkn98ox.cloudfront.net/actuator/health
+
+jobs:
+  deploy:
+    name: Build and deploy production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: notes-frontend/package-lock.json
+
+      - name: Build backend
+        working-directory: notes-backend
+        run: mvn -B -DskipTests package
+
+      - name: Install frontend dependencies
+        working-directory: notes-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: notes-frontend
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Prepare backend version label
+        run: echo "VERSION_LABEL=github-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      - name: Package backend for Elastic Beanstalk
+        run: |
+          mkdir -p eb-bundle
+          cp notes-backend/target/notes-backend-0.0.1-SNAPSHOT.jar eb-bundle/application.jar
+          cp notes-backend/Procfile eb-bundle/Procfile
+          (cd eb-bundle && zip -r "../${VERSION_LABEL}.zip" application.jar Procfile)
+
+      - name: Upload backend bundle
+        run: aws s3 cp "${VERSION_LABEL}.zip" "s3://${EB_SOURCE_BUCKET}/github-actions/${VERSION_LABEL}.zip"
+
+      - name: Create Elastic Beanstalk application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle S3Bucket="$EB_SOURCE_BUCKET",S3Key="github-actions/${VERSION_LABEL}.zip" \
+            --process \
+            --region "$AWS_REGION"
+
+      - name: Deploy backend to Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --region "$AWS_REGION"
+          aws elasticbeanstalk wait environment-updated \
+            --environment-names "$EB_ENVIRONMENT_NAME" \
+            --region "$AWS_REGION"
+
+      - name: Deploy frontend to S3
+        working-directory: notes-frontend
+        run: aws s3 sync dist "s3://${FRONTEND_BUCKET}" --delete
+
+      - name: Invalidate frontend CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$FRONTEND_DISTRIBUTION_ID" \
+            --paths "/*"
+
+      - name: Smoke test backend
+        run: curl --fail --silent --show-error "$BACKEND_HEALTH_URL"
+
+      - name: Smoke test frontend
+        run: curl --fail --silent --show-error "$FRONTEND_URL" > /dev/null
