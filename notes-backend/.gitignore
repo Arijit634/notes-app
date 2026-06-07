@@ -52,6 +52,7 @@ src/main/resources/application*.properties
 src/test/resources/application*.properties
 application*.properties
 !src/main/resources/application.properties.template
+!src/main/resources/application-aws.properties
 
 # Exclude large jar files
 bfg-1.15.0.jar

@@ -121,7 +121,29 @@ jobs:
             --paths "/*"
 
       - name: Smoke test backend
-        run: curl --fail --silent --show-error "$BACKEND_HEALTH_URL"
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$BACKEND_HEALTH_URL"; then
+              exit 0
+            fi
+
+            echo "Backend health check failed; retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "Backend health check failed after retries"
+          exit 1
 
       - name: Smoke test frontend
-        run: curl --fail --silent --show-error "$FRONTEND_URL" > /dev/null
+        run: |
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error "$FRONTEND_URL" > /dev/null; then
+              exit 0
+            fi
+
+            echo "Frontend check failed; retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "Frontend check failed after retries"
+          exit 1
