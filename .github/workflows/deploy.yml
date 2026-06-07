@@ -85,7 +85,6 @@ jobs:
             --application-name "$EB_APPLICATION_NAME" \
             --version-label "$VERSION_LABEL" \
             --source-bundle S3Bucket="$EB_SOURCE_BUCKET",S3Key="github-actions/${VERSION_LABEL}.zip" \
-            --process \
             --region "$AWS_REGION"
 
       - name: Deploy backend to Elastic Beanstalk
